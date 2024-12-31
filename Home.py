@@ -10,7 +10,7 @@ st.markdown(
         }
 
         .title {
-            color: #1f77b4;  /* Blue color for the title */
+            color: #8BC34A;  /* Blue color for the title */
             font-weight: bold;
         }
 
@@ -34,6 +34,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+
+
 # Page Title
 st.markdown("<h1 class='title'>Welcome to the Economic Health Dashboard</h1>", unsafe_allow_html=True)
 
@@ -41,7 +43,7 @@ st.markdown("<h1 class='title'>Welcome to the Economic Health Dashboard</h1>", u
 st.markdown("<h2 class='section-title'>What is this platform?</h2>", unsafe_allow_html=True)
 st.write(
     "The Economic Health Dashboard is a comprehensive platform designed to provide in-depth analysis of macroeconomic indicators and asset class behaviors."
-    " The platform utilizes advanced financial models, interactive visualizations, and real-time data to offer valuable insights into economic conditions."
+    " The platform utilizes advanced financial models, interactive visualizations, and real-time data to offer insights into economic conditions."
     " Whether you are an investor, financial analyst, or researcher, this platform helps you understand the global economic landscape and make data-driven decisions."
 )
 
@@ -50,7 +52,7 @@ st.markdown("<h2 class='section-title'>Why does it exist?</h2>", unsafe_allow_ht
 st.write(
     "In today's dynamic and fast-paced global economy, understanding macroeconomic trends and their impact on asset classes is crucial."
     " This platform exists to fill the gap in easily accessible, interactive, and actionable macroeconomic data analysis."
-    " By integrating diverse datasets and financial models, we aim to provide a comprehensive tool for identifying investment opportunities, managing risks, and making informed decisions."
+    " By integrating diverse datasets and financial models, we aim to provide a comprehensive tool for help YOU make informed decisions."
 )
 
 # Who Section
@@ -78,5 +80,5 @@ st.write(
 # Optional Footer or Contact Information
 st.markdown("<h3 class='section-title'>Contact & Support</h3>", unsafe_allow_html=True)
 st.write(
-    "For inquiries or feedback, please contact us at: [your-email@example.com](mailto:your-email@example.com). We are here to help you make the most out of the platform."
+    "For inquiries or feedback, please contact me at: [Owenthacker13@hotmail.com](mailto:Owenthacker13@hotmail.com). We are here to help you make the most out of the platform."
 )
