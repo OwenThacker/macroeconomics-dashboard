@@ -1,0 +1,7 @@
+[theme]
+primaryColor = "#1f77b4"   # You can change this to your preferred color
+backgroundColor = "#ffffff"  # Set background color to white
+secondaryBackgroundColor = "#f0f0f0"  # Light secondary background
+textColor = "#000000"  # Black text color
+font = "sans serif"  # Use sans-serif font
+
