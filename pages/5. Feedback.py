@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import pandas as pd
 
-
 st.set_page_config(page_title="User Feedback", layout="wide")
 
 # CSS Styling with Tightened Padding and Margins
@@ -123,10 +122,10 @@ with st.form("feedback_form"):
         for question, answer_type in questions:
             st.markdown(f"<div class='question-text'>{question}</div>", unsafe_allow_html=True)
             if answer_type == "text_area":
-                responses[question] = st.text_area("", height=100, key=question)
+                responses[question] = st.text_area(question, height=100, key=question)
             else:
-                responses[question] = st.radio("", answer_type, key=question)
-            st.write("")
+                responses[question] = st.radio(question, answer_type, key=question)
+            st.write("")  # Adds a small space between questions
 
         st.markdown("<hr>", unsafe_allow_html=True)
 
