@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+import pandas as pd
+
 
 st.set_page_config(page_title="User Feedback", layout="wide")
 
@@ -16,7 +18,7 @@ st.markdown("""
 
     /* Section Title Styling */
     .section-title { 
-        font-size: 3.2em;
+        font-size: 2.0em;
         font-weight: bold;
         margin: 20px 0 10px 0;
         color: #8BC34A;
@@ -26,10 +28,10 @@ st.markdown("""
     
     /* Question Text Styling */
     .question-text {
-        font-size: 2.0em;
+        font-size: 1.8em;
         font-weight: 600;
         color: #000000;
-        margin: 5px 0 5px 0;
+        margin: 2px 0 5px 0;
     }
     
     /* Radio Button Styling */
