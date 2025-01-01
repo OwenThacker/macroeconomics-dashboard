@@ -29,12 +29,17 @@ st.markdown(
             padding: 5px;
             border-radius: 4px;
         }
+
+        .footer {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 15px;
+            margin-top: 30px;
+            text-align: center;
+        }
     </style>
     """,
     unsafe_allow_html=True
 )
-
-
 
 # Page Title
 st.markdown("<h1 class='title'>Welcome to the Economic Health Dashboard</h1>", unsafe_allow_html=True)
@@ -77,8 +82,27 @@ st.write(
     " Select a dashboard from the sidebar to start analyzing the data."
 )
 
-# Optional Footer or Contact Information
+# Feedback Section (Updated with final question)
+st.markdown("<div class='footer'>", unsafe_allow_html=True)
+st.markdown("<h4 class='section-title'>We value your feedback</h4>", unsafe_allow_html=True)
+st.write(
+    "Your input is essential in making this platform better. Please share your thoughts by answering the following questions:"
+)
+st.markdown(
+    """
+    - Did this platform provide valuable insights into macroeconomic trends?
+    - How intuitive and user-friendly did you find the interface?
+    - Were the visualizations helpful in understanding the data?
+    - Is there any additional functionality or feature you would like to see?
+    - Do you feel that the platform can assist in your decision-making process?
+    - Could you see yourself using this platform regularly? Is it something I should keep working on, keeping updated, and improving?
+    - Is this platform something you would pay for? If not, what would make you consider it as a paid service?
+    """
+)
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Optional Footer or Contact Information with Feedback Request
 st.markdown("<h3 class='section-title'>Contact & Support</h3>", unsafe_allow_html=True)
 st.write(
-    "For inquiries or feedback, please contact me at: [Owenthacker13@hotmail.com](mailto:Owenthacker13@hotmail.com). We are here to help you make the most out of the platform."
+    "For inquiries or feedback, please contact me at: [Owenthacker13@hotmail.com](mailto:Owenthacker13@hotmail.com)."
 )
