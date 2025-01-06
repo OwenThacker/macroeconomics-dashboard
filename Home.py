@@ -61,7 +61,7 @@ PLOT_FILES = [
     ("Econ_Health_Score.html", "Economic Health Score", "100%", 1000),
 ]
 
-PLOTS_PATH = os.path.join(os.path.dirname(__file__), "..", "plots")
+PLOTS_PATH = os.path.join(os.path.dirname(__file__), "plots")
 
 # Display plots with individual dimensions and descriptions
 for plot_file, plot_title, max_width, max_height in PLOT_FILES:
