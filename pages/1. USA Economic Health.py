@@ -91,7 +91,7 @@ PLOT_DESCRIPTIONS = {
 }
 
 # Page title
-st.title("Economic Health Dashboard")
+st.title("USA Economic Health Dashboard")
 
 st.write("""
 This dashboard offers key insights into economic health indicators through interactive visualizations. 

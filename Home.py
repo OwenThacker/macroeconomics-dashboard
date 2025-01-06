@@ -1,4 +1,7 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import os
+import base64
 
 # Apply custom CSS for light theme
 st.markdown(
@@ -43,6 +46,66 @@ st.markdown(
 
 # Page Title
 st.markdown("<h1 class='title'>Welcome to the Economic Health Dashboard</h1>", unsafe_allow_html=True)
+
+
+# Plot descriptions
+PLOT_DESCRIPTIONS = {
+    "Econ_Health_Score.html": "The Economic Health Score provides a concise overview of the economy's current state, indicating positive economic fundamentals and sustained growth momentum.",
+    "DGDP_Ratio.html": "The Debt-to-GDP ratio shows a manageable upward trajectory, indicating controlled debt management and fiscal stability.",
+    "usa_revenue.html": "Revenue trends demonstrate steady Month-over-Month growth, supporting fiscal health and stability.",
+    "Interest_Cov_Ratio.html": "Improvement in Interest Coverage Ratio indicates efficient debt management and stronger fiscal health.",
+    "usa_sur_def.html": "Improvement in the surplus/deficit position highlights effective fiscal management and financial stability."
+}
+
+# Page title
+st.title("Economic Health Dashboard")
+
+# Plot details with individual dimensions (width and height)
+PLOT_FILES = [
+    ("Econ_Health_Score.html", "Economic Health Score", "100%", 1000),
+]
+
+PLOTS_PATH = os.path.join(os.path.dirname(__file__), "..", "plots")
+
+# Display plots with individual dimensions and descriptions
+for plot_file, plot_title, max_width, max_height in PLOT_FILES:
+    plot_path = os.path.join(PLOTS_PATH, plot_file)
+    
+    if os.path.exists(plot_path):
+        with open(plot_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        
+        st.markdown(f"### {plot_title}")
+        
+        # Add description with styled container
+        if plot_file in PLOT_DESCRIPTIONS:
+            st.markdown(f"""
+                <div style='
+                    padding: 15px;
+                    margin-bottom: 25px;
+                    background-color: #f8f9fa;
+                    border-left: 4px solid #1f77b4;
+                    font-size: 0.95em;
+                    line-height: 1.6;
+                '>
+                    {PLOT_DESCRIPTIONS[plot_file]}
+                </div>
+            """, unsafe_allow_html=True)
+        
+        # Encode HTML content as base64
+        html_base64 = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+        
+        # Display the plot with individual dimensions
+        st.components.v1.html(
+            f"""
+            <iframe src="data:text/html;base64,{html_base64}" 
+                    width="{max_width}" height="{max_height}" 
+                    style="border: none;"></iframe>
+            """, 
+            height=max_height
+        )
+    else:
+        st.error(f"Plot file '{plot_file}' not found in {PLOTS_PATH}")
 
 # Introduction Section
 st.markdown("<h2 class='section-title'>What is this platform?</h2>", unsafe_allow_html=True)
