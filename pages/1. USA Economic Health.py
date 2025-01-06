@@ -83,7 +83,6 @@ st.markdown(
 
 # Plot descriptions
 PLOT_DESCRIPTIONS = {
-    "Econ_Health_Score.html": "The Economic Health Score provides a concise overview of the economy's current state, indicating positive economic fundamentals and sustained growth momentum.",
     "DGDP_Ratio.html": "The Debt-to-GDP ratio shows a manageable upward trajectory, indicating controlled debt management and fiscal stability.",
     "usa_revenue.html": "Revenue trends demonstrate steady Month-over-Month growth, supporting fiscal health and stability.",
     "Interest_Cov_Ratio.html": "Improvement in Interest Coverage Ratio indicates efficient debt management and stronger fiscal health.",
@@ -100,7 +99,6 @@ Key metrics such as Debt-to-GDP, revenue trends, and fiscal surplus/deficit are 
 
 # Plot details with individual dimensions (width and height)
 PLOT_FILES = [
-    ("Econ_Health_Score.html", "Economic Health Score", "100%", 400),
     ("DGDP_Ratio.html", "Debt-to-GDP Ratio", "100%", 650),
     ("usa_revenue.html", "USA Revenue", "100%", 650),
     ("Interest_Cov_Ratio.html", "Interest Coverage Ratio", "100%", 650),

@@ -50,11 +50,7 @@ st.markdown("<h1 class='title'>Welcome to the Economic Health Dashboard</h1>", u
 
 # Plot descriptions
 PLOT_DESCRIPTIONS = {
-    "Econ_Health_Score.html": "The Economic Health Score provides a concise overview of the economy's current state, indicating positive economic fundamentals and sustained growth momentum.",
-    "DGDP_Ratio.html": "The Debt-to-GDP ratio shows a manageable upward trajectory, indicating controlled debt management and fiscal stability.",
-    "usa_revenue.html": "Revenue trends demonstrate steady Month-over-Month growth, supporting fiscal health and stability.",
-    "Interest_Cov_Ratio.html": "Improvement in Interest Coverage Ratio indicates efficient debt management and stronger fiscal health.",
-    "usa_sur_def.html": "Improvement in the surplus/deficit position highlights effective fiscal management and financial stability."
+    "Econ_Health_Score.html": "The Economic Health Heatmap provides a overview of the economy's current state"
 }
 
 # Page title
