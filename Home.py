@@ -3,6 +3,8 @@ import streamlit.components.v1 as components
 import os
 import base64
 
+st.set_page_config(page_title="Economic Health Dashboard", layout="wide")
+
 # Apply custom CSS for light theme
 st.markdown(
     """
