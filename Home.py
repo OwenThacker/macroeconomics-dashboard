@@ -1,152 +1,406 @@
 import streamlit as st
-import streamlit.components.v1 as components
+from datetime import datetime
 import os
 import base64
 
-st.set_page_config(page_title="Economic Health Dashboard", layout="wide")
-
-# Apply custom CSS for light theme
-st.markdown(
-    """
-    <style>
-        body {
-            background-color: #ffffff;  /* White background */
-            color: #000000;  /* Black text color */
-        }
-
-        .title {
-            color: #8BC34A;  /* Blue color for the title */
-            font-weight: bold;
-        }
-
-        .section-title {
-            color: #333333;  /* Dark grey color for section titles */
-            font-weight: bold;
-        }
-
-        .section-content {
-            font-size: 18px;
-            line-height: 1.6;
-        }
-
-        .highlight {
-            background-color: #f9f9f9; /* Light background for important text */
-            padding: 5px;
-            border-radius: 4px;
-        }
-
-        .footer {
-            border-top: 1px solid #e0e0e0;
-            padding-top: 15px;
-            margin-top: 30px;
-            text-align: center;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
+# Configure Streamlit page
+st.set_page_config(
+    page_title="Alterra | Home",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Page Title
-st.markdown("<h1 class='title'>Welcome to the Economic Health Dashboard</h1>", unsafe_allow_html=True)
+# Get the absolute path to the image file
+image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
 
+# Function to encode image to base64
+def image_to_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        encoded_image = base64.b64encode(img_file.read()).decode()
+    return f"data:image/png;base64,{encoded_image}"
 
-# Plot descriptions
-PLOT_DESCRIPTIONS = {
-    "Econ_Health_Score.html": "The Economic Health Heatmap provides a overview of the economy's current state"
-}
+# Get the base64 encoded image
+image_base64 = image_to_base64(image_path)
 
-# Page title
-st.title("Economic Health Dashboard")
+# Reuse the same CSS styles from the economic page with additional homepage-specific styles
+st.markdown(f"""
+    <style>
+        /* Sidebar Styles */
+        [data-testid="stSidebar"] {{
+            background-color: #FAFAFA;
+            border-right: 1px solid #E0E0E0;
+            padding-top: 1rem;
+        }}
+        
+        .main {{
+            background-color: #FFFFFF;
+        }}
+        
+        /* Hero Section Styles */
+        .hero-container {{
+            position: relative;
+            padding: 6rem 2rem;
+            text-align: center;
+            margin: -4rem -4rem 1rem -4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            background-image: url("{image_base64}");
+            background-size: 100% 80%; /* Adjust the size of the image vertically */
+            background-position: center 0%; /* Move the image down */
+            background-repeat: no-repeat;
+        }}
 
-# Plot details with individual dimensions (width and height)
-PLOT_FILES = [
-    ("Econ_Health_Score.html", "Economic Health Score", "100%", 1000),
+        /* Hero Title Styles */
+        .company-title {{
+            font-size: 6rem;
+            font-weight: 700;
+            color: #2E7D32; /* Dark green title */
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+            z-index: 2; /* Ensure the title is above the image */
+            margin-top: -40rem;
+        }}
+        
+        .company-subtitle {{
+            font-size: 2rem;
+            color: #2E7D32;
+            max-width: 800px;
+            margin: 0 auto;
+            z-index: 2;
+        }}
+        
+        /* Market Insight Cards (Market Pulse Cards) */
+        .insight-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 0;
+            margin-top: -25rem;
+        }}
+        
+        .insight-card {{
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #E0E0E0;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }}
+        
+        .insight-card:hover {{
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }}
+        
+        .insight-title {{
+            font-size: 1.2rem;
+            color: #2E7D32;
+            font-weight: 600;
+        }}
+        
+        .insight-content {{
+            font-size: 1.0rem;
+            color: #262626;
+            margin-top: 0.5rem;
+        }}
+        
+        .insight-footer {{
+            font-size: 0.9rem;
+            color: #90A4AE;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }}
+        
+        .insight-impact {{
+            color: #2E7D32;
+            font-weight: 600;
+        }}
+
+        /* Market Insights header */
+        .market-insights-header {{
+            margin-bottom: 0.5rem;
+            margin-top: -25rem;
+        }}
+
+        /* About Section */
+        .about-section {{
+            background: #F8F9FA;
+            border-radius: 16px;
+            padding: 4rem 2rem;
+            margin: 2rem 0;
+        }}
+        
+        .feature-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }}
+        
+        .feature-card {{
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #E0E0E0;
+            transition: all 0.3s ease;
+        }}
+        
+        .feature-card:hover {{
+            border-color: #2E7D32;
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
+# Sidebar Configuration
+with st.sidebar:
+    st.markdown("""
+        <div style="text-align: center; padding: 1rem 0;">
+            <h1 style="color: #2E7D32; font-size: 1.8rem; font-weight: 600;">ALTERRA</h1>
+            <p style="color: #90A4AE; margin-top: 0.5rem;">Economic Intelligence</p>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Market Status Indicator
+    current_time = datetime.now()
+    market_status = "Active" if 9 <= current_time.hour <= 16 else "Closed"
+    status_color = "#2E7D32" if market_status == "Active" else "#9E9E9E"
+    
+    st.markdown(f"""
+        <div style="background: #F8F9FA; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+            <div style="font-size: 0.9rem; color: #90A4AE;">MARKET STATUS</div>
+            <div style="font-size: 1.1rem; color: {status_color}; font-weight: 500;">
+                ● {market_status}
+            </div>
+            <div style="font-size: 0.8rem; color: #90A4AE; margin-top: 0.5rem;">
+                {current_time.strftime('%H:%M:%S UTC')}
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Market Insights
+    st.markdown("### Market Insights", unsafe_allow_html=True)
+    insights = [
+        {
+            "title": "Energy Impact Alert",
+            "content": "Energy prices surge 15% - logistics sector under pressure",
+            "trend": "↗️ Rising",
+            "impact": "High"
+        },
+        {
+            "title": "Supply Chain Update",
+            "content": "Regional commerce shows 20% growth in Q1",
+            "trend": "↗️ Growing",
+            "impact": "Medium"
+        },
+        {
+            "title": "Tech Sector Analysis",
+            "content": "Enterprise solutions maintain 12% growth rate",
+            "trend": "→ Stable",
+            "impact": "Moderate"
+        }
+    ]
+    
+    for insight in insights:
+        st.markdown(f"""
+            <div class="insight-card">
+                <div class="insight-title">{insight['title']}</div>
+                <div class="insight-content">{insight['content']}</div>
+                <div class="insight-footer">
+                    <div>{insight['trend']}</div>
+                    <div class="insight-impact">{insight['impact']}</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+# Insights to be displayed across multiple cards
+insights = [
+    {
+        "title": "China's Economic Struggles",
+        "content": (
+            "China has dramatically increased its private sector leverage over the last decade, which is now causing problems, particularly due to a troubled real estate market."
+        ),
+        "trend": "↗️ Rising",
+        "impact": "High"
+    },
+    {
+        "title": "Housing Market Crisis in Canada, Sweden, and Switzerland",
+        "content": (
+            "Canada, Sweden, and Switzerland heavily rely on their housing markets and high household debt. With interest rates rising in 2022-2023 following the Fed's actions, these economies are now feeling the effects. "
+            "Variable rate mortgages and refinancing cliffs add to the strain."
+        ),
+        "trend": "↗️ Growing",
+        "impact": "Medium"
+    },
+    {
+        "title": "Fears of Inflation in 2025",
+        "content": (
+            "For 2025, inflation remains a significant concern. The steepening of the yield curve, driven by fewer (or no) rate cuts than expected, and the ongoing increase in the term premium are causes for worry. "
+            "If the economy accelerates, inflation might resurge unexpectedly. "
+            "The Federal Reserve is walking back from further rate cuts until the disinflation trend resumes."
+        ),
+        "trend": "↗️ Growing",
+        "impact": "High"
+    },
+    {
+        "title": "Fed's Policy and Inflation Control",
+        "content": (
+            "As for the Federal Reserve, it is right to walk back from further rate cuts until the disinflation trend of 2023 resumes. "
+            "The downside momentum for short-term rates has ended, and the Fed is in the right place at 4.25-50%. Further cuts are not justified until inflation approaches its target."
+        ),
+        "trend": "→ Stable",
+        "impact": "Moderate"
+    },
+    {
+        "title": "Recession Probability Rising",
+        "content": (
+            "Recession probabilities are trending upwards, with the current probability at 33.14% and expected to rise to 68% in the next 12 months."
+        ),
+        "trend": "↗️ Rising",
+        "impact": "High"
+    }
 ]
 
-PLOTS_PATH = os.path.join(os.path.dirname(__file__), "plots")
+# Hero Section with Reduced Opacity Background Image
+st.markdown("""
+    <div class="hero-container">
+        <div class="company-title">ALTERRA</div>
+        <div class="company-subtitle">
+            Transforming Economic Intelligence into Strategic Advantage
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-# Display plots with individual dimensions and descriptions
-for plot_file, plot_title, max_width, max_height in PLOT_FILES:
-    plot_path = os.path.join(PLOTS_PATH, plot_file)
-    
-    if os.path.exists(plot_path):
-        with open(plot_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
-        
-        st.markdown(f"### {plot_title}")
-        
-        # Add description with styled container
-        if plot_file in PLOT_DESCRIPTIONS:
-            st.markdown(f"""
-                <div style='
-                    padding: 15px;
-                    margin-bottom: 25px;
-                    background-color: #f8f9fa;
-                    border-left: 4px solid #1f77b4;
-                    font-size: 0.95em;
-                    line-height: 1.6;
-                '>
-                    {PLOT_DESCRIPTIONS[plot_file]}
-                </div>
-            """, unsafe_allow_html=True)
-        
-        # Encode HTML content as base64
-        html_base64 = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
-        
-        # Display the plot with individual dimensions
-        st.components.v1.html(
-            f"""
-            <iframe src="data:text/html;base64,{html_base64}" 
-                    width="{max_width}" height="{max_height}" 
-                    style="border: none;"></iframe>
-            """, 
-            height=max_height
-        )
-    else:
-        st.error(f"Plot file '{plot_file}' not found in {PLOTS_PATH}")
 
-# Introduction Section
-st.markdown("<h2 class='section-title'>What is this platform?</h2>", unsafe_allow_html=True)
-st.write(
-    "The Economic Health Dashboard is a comprehensive platform designed to provide in-depth analysis of macroeconomic indicators and asset class behaviors."
-    " The platform utilizes advanced financial models, interactive visualizations, and real-time data to offer insights into economic conditions."
-    " Whether you are an investor, financial analyst, or researcher, this platform helps you understand the global economic landscape and make data-driven decisions."
-)
+# Market Insights Section (with reduced margin and styled like navigation cards)
+st.markdown("""
+    <div style="padding: 0rem 0;"> <!-- Adjust padding above the header -->
+    <!-- Market Insights Header -->
+    <h2 class="market-insights-header" style="color: #2E7D32; font-size: 2rem; margin-bottom: 0.5rem; margin-top: -20rem;">
+        Top 5 Market Insights This Quarter
+    </h2>
+    <!-- Insight Cards Grid -->
+    <div class="insight-grid" style="margin-top: -2rem;"> <!-- Reset margin-top of the cards -->
+        <!-- Insight 1 -->
+        <div class="insight-card">
+            <div class="insight-title">China's Economic Struggles</div>
+            <div class="insight-content">
+                China has dramatically increased its private sector leverage over the last decade, which is now causing problems, particularly due to a troubled real estate market.
+            </div>
+            <div class="insight-footer">
+                <div>↗️ Rising</div>
+                <div class="insight-impact">High</div>
+            </div>
+        </div>
+        <!-- Insight 2 -->
+        <div class="insight-card">
+            <div class="insight-title">Housing Market Crisis in Canada, Sweden, and Switzerland</div>
+            <div class="insight-content">
+                Canada, Sweden, and Switzerland heavily rely on their housing markets and high household debt. With interest rates rising in 2022-2023 following the Fed's actions, these economies are now feeling the effects. Variable rate mortgages and refinancing cliffs add to the strain.
+            </div>
+            <div class="insight-footer">
+                <div>↗️ Growing</div>
+                <div class="insight-impact">Medium</div>
+            </div>
+        </div>
+        <!-- Insight 3 -->
+        <div class="insight-card">
+            <div class="insight-title">Fears of Inflation in 2025</div>
+            <div class="insight-content">
+                For 2025, inflation remains a significant concern. The steepening of the yield curve, driven by fewer (or no) rate cuts than expected, and the ongoing increase in the term premium are causes for worry. If the economy accelerates, inflation might resurge unexpectedly.
+                The Federal Reserve is walking back from further rate cuts until the disinflation trend resumes.
+            </div>
+            <div class="insight-footer">
+                <div>↗️ Growing</div>
+                <div class="insight-impact">High</div>
+            </div>
+        </div>
+        <!-- Insight 4 -->
+        <div class="insight-card">
+            <div class="insight-title">Fed's Policy and Inflation Control</div>
+            <div class="insight-content">
+                As for the Federal Reserve, it is right to walk back from further rate cuts until the disinflation trend of 2023 resumes. The downside momentum for short-term rates has ended, and the Fed is in the right place at 4.25-50%. Further cuts are not justified until inflation approaches its target.
+            </div>
+            <div class="insight-footer">
+                <div>→ Stable</div>
+                <div class="insight-impact">Moderate</div>
+            </div>
+        </div>
+        <!-- Insight 5 -->
+        <div class="insight-card">
+            <div class="insight-title">Recession Probability Rising</div>
+            <div class="insight-content">
+                Recession probabilities are trending upwards, with the current probability at 33.14% and expected to rise to 68% in the next 12 months.
+            </div>
+            <div class="insight-footer">
+                <div>↗️ Rising</div>
+                <div class="insight-impact">High</div>
+            </div>
+        </div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
-# Why Section
-st.markdown("<h2 class='section-title'>Why does it exist?</h2>", unsafe_allow_html=True)
-st.write(
-    "In today's dynamic and fast-paced global economy, understanding macroeconomic trends and their impact on asset classes is crucial."
-    " This platform exists to fill the gap in easily accessible, interactive, and actionable macroeconomic data analysis."
-    " By integrating diverse datasets and financial models, we aim to provide a comprehensive tool for help YOU make informed decisions."
-)
+# Conclusion based on insights
+st.markdown("""
+    <div class="insight-card">
+        <div class="insight-title">Conclusion</div>
+        <div class="insight-content">
+            The global economic outlook for 2025 is filled with potential risks. Key economies such as China, Canada, Sweden, and Switzerland are facing considerable challenges, particularly in the housing markets, which could lead to broader financial instability. 
+            At the same time, inflation remains a concern, with fears of a resurgence in prices despite the Fed's recent policy decisions. 
+            The increased probability of a recession, along with the ongoing inflationary pressures, suggests that the economy may face tough times ahead. As we continue to monitor the situation, businesses and investors should brace for potential market volatility.
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-# Who Section
-st.markdown("<h2 class='section-title'>Who is it for?</h2>", unsafe_allow_html=True)
-st.write(
-    "This platform is primarily designed for professionals in the finance and investment industries. However, it can be useful for anyone interested in understanding the economic forces that drive global markets."
-)
-st.markdown(
-    """
-    **Target Audience:**
-    - **Investment Funds & Hedge Funds:** For analyzing macroeconomic indicators and their effects on asset classes.
-    - **Financial Analysts & Researchers:** To gain insights into the economic landscape for decision-making and forecasting.
-    - **Real Estate & Property Developers:** To assess the impact of macroeconomic conditions on the real estate market.
-    - **Policy Makers & Economists:** To monitor economic health and assess policy impacts.
-    """
-)
+# About Section
+st.markdown("""
+    <div class="about-section">
+        <h2 style="color: #2E7D32; font-size: 2rem; text-align: center; margin-bottom: 2rem;">
+            Empowering Economic Decision Making
+        </h2>
+        <p style="color: #262626; text-align: center; max-width: 800px; margin: 0 auto; font-size: 1.1rem; line-height: 1.6;">
+            Alterra delivers cutting-edge economic intelligence through advanced analytics, 
+            real-time market insights, and comprehensive data analysis. Our platform enables 
+            leaders to make informed decisions in an ever-evolving global economy.
+        </p>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">🎯</div>
+                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Precision Analytics</h3>
+                <p style="color: #666666;">Advanced algorithms delivering accurate market predictions</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">⚡</div>
+                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Real-Time Data</h3>
+                <p style="color: #666666;">Instant access to global market movements</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">📈</div>
+                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Strategic Insights</h3>
+                <p style="color: #666666;">Actionable intelligence for informed decision-making</p>
+            </div>
+            <div class="feature-card">
+                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">🔒</div>
+                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Enterprise Security</h3>
+                <p style="color: #666666;">Bank-grade protection for your sensitive data</p>
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
-# Call to Action Section
-st.markdown("<h2 class='section-title'>Start Exploring!</h2>", unsafe_allow_html=True)
-st.write(
-    "Explore the different sections of the platform to understand the global economic context, assess asset class behavior, and dive deep into macroeconomic trends."
-    " Select a dashboard from the sidebar to start analyzing the data."
-)
-
-# Feedback Section (Updated with final question)
-st.markdown("<div class='footer'>", unsafe_allow_html=True)
-st.markdown("<h4 class='section-title'>We value your feedback</h4>", unsafe_allow_html=True)
-st.write(
-    "Your input is essential in making this platform better. Please share your thoughts by answering the feedback form in the feeback section"
-)
-
+# Footer (reused from economic page)
+st.markdown(f"""
+    <div style="background: #F8FAFC; padding: 2rem; margin-top: 3rem; text-align: center; border-top: 1px solid #E0E0E0;">
+        <div style="color: #90A4AE; font-size: 0.9rem;">Powered by</div>
+        <div style="color: #2E7D32; font-size: 1.2rem; font-weight: 600; margin-top: 0.5rem;">ALTERRA</div>
+        <div style="color: #90A4AE; font-size: 0.8rem; margin-top: 1rem;">
+            Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</div>
+    </div>
+""", unsafe_allow_html=True)
