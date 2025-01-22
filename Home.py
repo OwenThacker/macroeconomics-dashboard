@@ -24,13 +24,6 @@ image_base64 = image_to_base64(image_path)
 
 st.markdown(f"""
     <style>
-        /* Apply scaling to the entire page */
-        .main {{
-            transform: scale(0.8);
-            transform-origin: 0 0;
-            width: 125%;
-            height: 125%;
-        }}
 
         /* Sidebar Styles */
         [data-testid="stSidebar"] {{

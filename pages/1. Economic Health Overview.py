@@ -16,11 +16,6 @@ st.set_page_config(
 # CSS to scale content dynamically based on screen size
 st.markdown("""
     <style>
-        /* Scale the entire page based on the available width */
-        .main {
-            transform: scale(0.8); /* This adjusts the page scaling */
-            transform-origin: 0 0;
-        }
         
         /* Sidebar styling */
         [data-testid="stSidebar"] {
