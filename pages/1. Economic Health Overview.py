@@ -13,21 +13,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Updated styling that focuses on the sidebar while preserving your existing styles
+# CSS to scale content dynamically based on screen size
 st.markdown("""
     <style>
-        /* Sidebar Styles */
+        /* Scale the entire page based on the available width */
+        .main {
+            transform: scale(0.8); /* This adjusts the page scaling */
+            transform-origin: 0 0;
+        }
+        
+        /* Sidebar styling */
         [data-testid="stSidebar"] {
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
+            position: fixed;
+            z-index: 99;
         }
         
-        .main {
-            background-color: #FFFFFF;
-        }
-        
-        /* Market Insight Card Styles for Sidebar */
+        /* Market Insight Card Styles */
         .insight-card {
             background: #FFFFFF;
             border-radius: 12px;
@@ -67,6 +71,50 @@ st.markdown("""
         .insight-impact {
             color: #2E7D32;
             font-weight: 600;
+        }
+        
+        /* Table styling */
+        table.dataframe tbody tr:nth-child(odd) {
+            background-color: #F8F9FA;
+        }
+        table.dataframe tbody tr:nth-child(even) {
+            background-color: #FFFFFF;
+        }
+        table.dataframe thead th {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2E7D32;
+        }
+        table.dataframe tbody td {
+            font-size: 0.9rem;
+            padding: 8px;
+        }
+        
+        /* Plot container styles */
+        .plot-container {
+            width: 100%;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .plot-container iframe {
+            width: 100% !important;
+            border: none !important;
+        }
+        
+        /* Utility classes */
+        .content-padding {
+            padding: 1rem;
+        }
+        
+        /* Remove column padding */
+        .stColumns > div {
+            padding: 0 !important;
+        }
+        
+        /* Remove element margins */
+        .element-container {
+            margin: 0 !important;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -133,7 +181,7 @@ with st.sidebar:
         """, unsafe_allow_html=True)
 
 # Main Content Header
-st.markdown("""
+st.markdown("""  
     <div style="padding: 1rem 0 2rem 0;">
         <h1 style="color: #2E7D32; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Economic Overview Dashboard</h1>
         <p style="color: #666666; font-size: 1.2rem; max-width: 800px;">
@@ -142,34 +190,62 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Key Metrics Row
-col1, col2, col3, col4 = st.columns(4)
-metrics = [
-    {"label": "Global Economic Score", "value": "94.2", "delta": "+2.1"},
-    {"label": "Market Volatility", "value": "18.5%", "delta": "-3.2"},
-    {"label": "Trading Volume", "value": "$2.8T", "delta": "+15%"},
-    {"label": "Active Markets", "value": "142", "delta": "+3"}
-]
+# Function to create dynamic plot scaling
+def create_plot_scaling_script():
+    return """
+        <script>
+            function adjustPlotSize() {
+                const plots = document.querySelectorAll('.plot-container iframe');
+                plots.forEach(plot => {
+                    const container = plot.parentElement;
+                    const availableWidth = container.offsetWidth;
+                    
+                    // Calculate scale based on available width
+                    const scale = availableWidth / 2400;
+                    
+                    // Apply the transform
+                    plot.style.transform = `scale(${scale})`;
+                    plot.style.transformOrigin = '0 0';
+                    
+                    // Adjust container height to match scaled content
+                    const scaledHeight = plot.offsetHeight * scale;
+                    container.style.height = `${scaledHeight}px`;
+                });
+            }
+            
+            // Run on load
+            window.addEventListener('load', adjustPlotSize);
+            
+            // Run on resize
+            window.addEventListener('resize', adjustPlotSize);
+            
+            // Additional trigger for Streamlit's dynamic updates
+            new MutationObserver(function(mutations) {
+                adjustPlotSize();
+            }).observe(document.body, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
+        </script>
+    """
 
-for col, metric in zip([col1, col2, col3, col4], metrics):
-    with col:
-        st.markdown(f"""
-            <div class="metric-card">
-                <div style="color: #90A4AE; font-size: 0.9rem;">{metric['label']}</div>
-                <div style="font-size: 1.8rem; font-weight: 600; color: #2E7D32;">{metric['value']}</div>
-                <div style="color: {'#2E7D32' if float(metric['delta'].replace('%','').replace('$','').replace('+','')) > 0 else '#FF5252'}; font-size: 0.9rem; margin-top: 0.5rem;">
-                    {metric['delta']}
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-# Improved Plot display
+# Modified load_html_plot function
 def load_html_plot(plot_file, height=600):
     try:
         plot_path = os.path.join("plots", plot_file)
         with open(plot_path, 'r', encoding='utf-8') as f:
             plot_html = f.read()
-            components.html(plot_html, height=height)
+            
+            # Wrap plot in container with scaling
+            responsive_plot = f"""
+                <div class="plot-container">
+                    {plot_html}
+                </div>
+                {create_plot_scaling_script()}
+            """
+            
+            components.html(responsive_plot, height=height)
     except Exception as e:
         st.error(f"Unable to load plot: {str(e)}")
         st.info("Plot visualization is temporarily unavailable")
@@ -178,123 +254,67 @@ def load_html_plot(plot_file, height=600):
 st.markdown("### Economic Health Score")
 load_html_plot("Econ_Health_Score.html")
 
+# Market data for tables
+market_data = pd.DataFrame({
+    "Market Sector": [
+        "Communication Services", "Consumer Discretionary", "Consumer Staples",
+        "Energy", "Financials", "Health Care", "Industrials", 
+        "Information Technology", "Materials", "Real Estate", "Utilities"
+    ],
+    "Weighting in S&P 500 (%)": [8.2, 11.3, 5.5, 3.2, 13.6, 10.1, 9.4, 32.5, 1.9, 2.3, 2.1],
+    "Trailing 6-Month Performance (%)": [7.6, 16.2, 2.0, 0.1, 13.9, -3.7, 8.7, -1.6, -5.0, 3.1, 10.6],
+    "Trailing 12-Month Performance (%)": [38.6, 29.7, 11.3, 11.7, 27.2, 0.7, 18.7, 34.5, 1.3, 2.5, 21.2]
+})
+
+# Round all numeric values to 1 decimal place
+market_data = market_data.round(1)
+
 # Function to determine the color based on performance values
 def get_performance_color(value):
     try:
         value = float(value)
-        # Apply color gradient from dark red to dark green
         if value < 0:
-            return f"background-color: rgba(255, 0, 0, {abs(value) / 100})"  # Dark red for negative values
+            return f"background-color: rgba(255, 0, 0, {abs(value) / 100});"  # Red for negative values
         elif value > 0:
-            return f"background-color: rgba(46, 125, 50, {value / 100})"  # Dark green for positive values
+            return f"background-color: rgba(46, 125, 50, {value / 100});"  # Green for positive values
         else:
-            return "background-color: #F8F9FA;"  # Neutral color for zero values
+            return "background-color: #F8F9FA;"  # Neutral for zero values
     except ValueError:
-        return "background-color: #F8F9FA;"  # Default for invalid data
+        return "background-color: #F8F9FA;"
 
-# Market Overview Table with color-coded returns
-st.markdown("""
-    <div style="margin: 2rem 0;">
-        <h3 style="color: #262626; margin-bottom: 1rem;">Market Overview</h3>
-        <table class="styled-table">
-            <thead>
-                <tr>
-                    <th>Market Sector</th>
-                    <th>Weighting in S&P 500 (%)</th>
-                    <th>Trailing 6-Month Performance (%)</th>
-                    <th>Trailing 12-Month Performance (%)</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Communication Services</td>
-                    <td>8.2</td>
-                    <td style="{}">7.6</td>
-                    <td style="{}">38.6</td>
-                </tr>
-                <tr>
-                    <td>Consumer Discretionary</td>
-                    <td>11.3</td>
-                    <td style="{}">16.2</td>
-                    <td style="{}">29.7</td>
-                </tr>
-                <tr>
-                    <td>Consumer Staples</td>
-                    <td>5.5</td>
-                    <td style="{}">2.0</td>
-                    <td style="{}">11.3</td>
-                </tr>
-                <tr>
-                    <td>Energy</td>
-                    <td>3.2</td>
-                    <td style="{}">0.1</td>
-                    <td style="{}">11.7</td>
-                </tr>
-                <tr>
-                    <td>Financials</td>
-                    <td>13.6</td>
-                    <td style="{}">13.9</td>
-                    <td style="{}">27.2</td>
-                </tr>
-                <tr>
-                    <td>Health Care</td>
-                    <td>10.1</td>
-                    <td style="{}">-3.7</td>
-                    <td style="{}">0.7</td>
-                </tr>
-                <tr>
-                    <td>Industrials</td>
-                    <td>9.4</td>
-                    <td style="{}">8.7</td>
-                    <td style="{}">18.7</td>
-                </tr>
-                <tr>
-                    <td>Information Technology</td>
-                    <td>32.5</td>
-                    <td style="{}">-1.6</td>
-                    <td style="{}">34.5</td>
-                </tr>
-                <tr>
-                    <td>Materials</td>
-                    <td>1.9</td>
-                    <td style="{}">-5.0</td>
-                    <td style="{}">1.3</td>
-                </tr>
-                <tr>
-                    <td>Real Estate</td>
-                    <td>2.3</td>
-                    <td style="{}">3.1</td>
-                    <td style="{}">2.5</td>
-                </tr>
-                <tr>
-                    <td>Utilities</td>
-                    <td>2.1</td>
-                    <td style="{}">10.6</td>
-                    <td style="{}">21.2</td>
-                </tr>
-                <tr>
-                    <td><strong>S&P 500 Index</strong></td>
-                    <td>100.0</td>
-                    <td style="{}"><strong>4.1</strong></td>
-                    <td style="{}"><strong>23.5</strong></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-""".format(
-    get_performance_color(7.6), get_performance_color(38.6),
-    get_performance_color(16.2), get_performance_color(29.7),
-    get_performance_color(2.0), get_performance_color(11.3),
-    get_performance_color(0.1), get_performance_color(11.7),
-    get_performance_color(13.9), get_performance_color(27.2),
-    get_performance_color(-3.7), get_performance_color(0.7),
-    get_performance_color(8.7), get_performance_color(18.7),
-    get_performance_color(-1.6), get_performance_color(34.5),
-    get_performance_color(-5.0), get_performance_color(1.3),
-    get_performance_color(3.1), get_performance_color(2.5),
-    get_performance_color(10.6), get_performance_color(21.2),
-    get_performance_color(4.1), get_performance_color(23.5)
-), unsafe_allow_html=True)
+# Style the main table
+styled_table = market_data.style.applymap(
+    get_performance_color, subset=["Trailing 6-Month Performance (%)", "Trailing 12-Month Performance (%)"]
+)
+
+# Sort data for the right table
+sorted_data = market_data.sort_values("Trailing 12-Month Performance (%)", ascending=False)
+
+# Side-by-side tables with specified heights
+col1, col2 = st.columns([2, 1], gap="small")
+
+# Market Overview Table
+with col1:
+    st.markdown("### Market Overview")
+    st.markdown(
+        styled_table.format({
+            "Weighting in S&P 500 (%)": "{:.1f}", 
+            "Trailing 6-Month Performance (%)": "{:.1f}", 
+            "Trailing 12-Month Performance (%)": "{:.1f}"
+        }).to_html(),
+        unsafe_allow_html=True
+    )
+
+# Sorted Performance Table
+with col2:
+    st.markdown("### Top Performers (Trailing 12-Month)")
+    sorted_table = sorted_data[["Market Sector", "Trailing 12-Month Performance (%)"]].style.applymap(
+        get_performance_color, subset=["Trailing 12-Month Performance (%)"]
+    )
+    st.markdown(
+        sorted_table.format({"Trailing 12-Month Performance (%)": "{:.1f}"}).to_html(),
+        unsafe_allow_html=True
+    )
 
 
 # Dropdown for Data Type Selection
@@ -310,7 +330,7 @@ data_type_options = [
 ]
 
 # Dropdown Section with Improved Styling (no background box around titles)
-st.markdown("""
+st.markdown(""" 
     <div style="margin: 0rem 0 0.2rem 0; padding: 0rem 1rem; border: 0px solid #E0E0E0; border-radius: 8px; background-color: #F8F9FA;">
         <p style="color: #2E7D32; font-size: 1.2rem; font-weight: 600; margin-bottom: 0.2rem; margin-left: -1rem;">Select Data Type</p>
     </div>
@@ -325,7 +345,7 @@ selected_data_type = st.selectbox(
 
 # Conditional Dropdown for PCA Regions
 if selected_data_type == "PCA - Indicators Influence on Expenditures":
-    st.markdown("""
+    st.markdown(""" 
         <div style="margin-top: 0.5rem; padding: 0rem 1rem; border: 0px solid #E0E0E0; border-radius: 8px; background-color: #FFFFFF;">
             <p style="color: #2E7D32; font-size: 1.2rem; font-weight: 600; margin-bottom: 0.2rem; margin-left: -1rem;">Select Region</p>
         </div>
@@ -338,7 +358,44 @@ if selected_data_type == "PCA - Indicators Influence on Expenditures":
     )
 
 
-# Function to load HTML plots with consistent styling
+
+# Function to create plot scaling script
+def create_plot_scaling_script():
+    return """
+        <script>
+            function adjustPlotSize() {
+                const plots = document.querySelectorAll('.plot-container iframe');
+                plots.forEach(plot => {
+                    const container = plot.parentElement;
+                    const availableWidth = container.offsetWidth;
+                    const scale = availableWidth / 2400;
+                    
+                    plot.style.transform = `scale(${scale})`;
+                    plot.style.transformOrigin = '0 0';
+                    
+                    const scaledHeight = plot.offsetHeight * scale;
+                    container.style.height = `${scaledHeight}px`;
+                });
+            }
+            
+            // Run on load
+            window.addEventListener('load', adjustPlotSize);
+            
+            // Run on resize
+            window.addEventListener('resize', adjustPlotSize);
+            
+            // Handle Streamlit's dynamic updates
+            new MutationObserver(function(mutations) {
+                adjustPlotSize();
+            }).observe(document.body, {
+                attributes: true,
+                childList: true,
+                subtree: true
+            });
+        </script>
+    """
+
+# Modified load_html_plot function
 def load_html_plot(plot_name):
     try:
         plot_path = os.path.join("plots", f"{plot_name}.html")
@@ -353,13 +410,16 @@ def load_html_plot(plot_name):
             else:
                 height = 3000
 
-            # Styled HTML wrapper for consistency
-            styled_html = f"""
-            <div style="width: 100%; max-width: 2400px; margin: 0 auto; border: 1px solid #E0E0E0; border-radius: 12px; padding: 1rem; background-color: #FFFFFF;">
-                {plot_html}
+            # Wrap plot in responsive container with styling
+            responsive_html = f"""
+            <div class="plot-container">
+                <div style="border: 1px solid #E0E0E0; border-radius: 12px; padding: 1rem; background-color: #FFFFFF;">
+                    {plot_html}
+                </div>
             </div>
+            {create_plot_scaling_script()}
             """
-            components.html(styled_html, height=height)
+            components.html(responsive_html, height=height)
     except FileNotFoundError:
         st.error(f"Plot '{plot_name}' not found.")
     except Exception as e:

@@ -6,7 +6,7 @@ from datetime import datetime
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Economic Health Dashboard",
+    page_title="SP500 Analysis",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -23,68 +23,30 @@ def image_to_base64(image_path):
 # Get the base64 encoded image
 image_base64 = image_to_base64(image_path)
 
-# Reuse the same CSS styles from the economic page with additional homepage-specific styles
-st.markdown(f"""
+# Sidebar CSS
+st.markdown("""
     <style>
-        /* Sidebar Styles */
-        [data-testid="stSidebar"] {{
+        [data-testid="stSidebar"] {
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
-            width: 250px;  /* Adjusted width */
-        }}
+            width: 250px;
+        }
         
-        .main {{
-            background-color: #FFFFFF;
-        }}
-        
-        /* Hero Section Styles */
-        .hero-container {{
-            position: relative;
-            padding: 6rem 2rem;
-            text-align: center;
-            margin: -4rem -4rem 1rem -4rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            background-image: url("{image_base64}");
-            background-size: 100% 80%; /* Adjust the size of the image vertically */
-            background-position: center 0%; /* Move the image down */
-            background-repeat: no-repeat;
-        }}
-
-        /* Hero Title Styles */
-        .company-title {{
-            font-size: 6rem;
-            font-weight: 700;
-            color: #2E7D32; /* Dark green title */
-            letter-spacing: -1px;
-            margin-bottom: 1rem;
-            z-index: 2; /* Ensure the title is above the image */
-            margin-top: -40rem;
-        }}
-        
-        .company-subtitle {{
-            font-size: 2rem;
+        .stSidebar h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
             color: #2E7D32;
-            max-width: 800px;
-            margin: 0 auto;
-            z-index: 2;
-        }}
-        
-        /* Market Insight Cards (Market Pulse Cards) */
-        .insight-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            padding: 2rem 0;
-            margin-top: -25rem;
-        }}
-        
-        .insight-card {{
+            text-align: center;
+        }
+
+        .stSidebar p {
+            color: #90A4AE;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+
+        .insight-card {
             background: #FFFFFF;
             border-radius: 12px;
             padding: 1.5rem;
@@ -92,134 +54,66 @@ st.markdown(f"""
             transition: all 0.3s ease;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-        }}
-        
-        .insight-card:hover {{
+            margin-bottom: 1rem;
+        }
+
+        .insight-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }}
-        
-        .insight-title {{
+        }
+
+        .insight-title {
             font-size: 1.2rem;
             color: #2E7D32;
             font-weight: 600;
-        }}
-        
-        .insight-content {{
+        }
+
+        .insight-content {
             font-size: 1.0rem;
             color: #262626;
             margin-top: 0.5rem;
-        }}
-        
-        .insight-footer {{
+        }
+
+        .insight-footer {
             font-size: 0.9rem;
             color: #90A4AE;
             display: flex;
             justify-content: space-between;
             margin-top: 1rem;
-        }}
-        
-        .insight-impact {{
+        }
+
+        .insight-impact {
             color: #2E7D32;
             font-weight: 600;
-        }}
+        }
 
-        /* Market Insights header */
-        .market-insights-header {{
-            margin-bottom: 0.5rem;
-            margin-top: -25rem;
-        }}
-
-        /* About Section */
-        .about-section {{
+        .market-status {
             background: #F8F9FA;
-            border-radius: 16px;
-            padding: 4rem 2rem;
-            margin: 2rem 0;
-        }}
-        
-        .feature-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }}
-        
-        .feature-card {{
-            background: #FFFFFF;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid #E0E0E0;
-            transition: all 0.3s ease;
-        }}
-        
-        .feature-card:hover {{
-            border-color: #2E7D32;
-        }}
-        
-        /* Sidebar Styling */
-        [data-testid="stSidebar"] {{
-            background-color: #FAFAFA;
-            border-right: 1px solid #E0E0E0;
-            padding-top: 1rem;
-            width: 250px;  /* Sidebar width adjustment */
-        }}
-
-        .stSidebar h1 {{
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #2E7D32;
-            text-align: center;
-        }}
-
-        .stSidebar p {{
-            color: #90A4AE;
-            margin-top: 0.5rem;
-            text-align: center;
-        }}
-
-        /* Dropdown Styling */
-        .stSelectbox div[data-baseweb="select"] {{
-            border: none;  /* Remove the border */
+            padding: 1rem;
             border-radius: 8px;
-            padding: 0.4rem;  /* Adjust padding for better fit */
-            font-size: 1rem;  /* Make text clearer */
-            color: #2E7D32;   /* Green text color */
-            background-color: #FFFFFF; /* Ensure white background */
-        }}
-
-        .stSelectbox div[data-baseweb="select"]:focus-within {{
-            outline: none;  /* Remove the default blue outline */
-            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.5);  /* Green shadow on focus */
-        }}
-
-        .stSelectbox div[data-baseweb="select"] > div {{
-            border: none !important;  /* Remove any border around dropdown */
-        }}
-
-        .stSelectbox label {{
-            margin-bottom: 0.2rem !important;  /* Reduce gap around label */
-        }}
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# Sidebar Configuration
+# Sidebar Content
 with st.sidebar:
+    # Sidebar Title
     st.markdown("""
         <div style="text-align: center; padding: 1rem 0;">
-            <h1 style="color: #2E7D32; font-size: 1.8rem; font-weight: 600;">ALTERRA</h1>
-            <p style="color: #90A4AE; margin-top: 0.5rem;">Economic Intelligence</p>
+            <h1>ALTERRA</h1>
+            <p>Economic Intelligence</p>
         </div>
     """, unsafe_allow_html=True)
-    
-    # Market Status Indicator
+
+    # Market Status
     current_time = datetime.now()
     market_status = "Active" if 9 <= current_time.hour <= 16 else "Closed"
     status_color = "#2E7D32" if market_status == "Active" else "#9E9E9E"
-    
+
     st.markdown(f"""
-        <div style="background: #F8F9FA; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+        <div class="market-status">
             <div style="font-size: 0.9rem; color: #90A4AE;">MARKET STATUS</div>
             <div style="font-size: 1.1rem; color: {status_color}; font-weight: 500;">
                 ● {market_status}
@@ -229,7 +123,7 @@ with st.sidebar:
             </div>
         </div>
     """, unsafe_allow_html=True)
-    
+
     # Market Insights
     st.markdown("### Market Insights", unsafe_allow_html=True)
     insights = [
@@ -252,7 +146,8 @@ with st.sidebar:
             "impact": "Moderate"
         }
     ]
-    
+
+    # Generate Insight Cards
     for insight in insights:
         st.markdown(f"""
             <div class="insight-card">
@@ -265,113 +160,136 @@ with st.sidebar:
             </div>
         """, unsafe_allow_html=True)
 
-# Main Content Header
+
+# Main Content Area
 st.markdown("""
-    <div style="padding: 1rem 0 2rem 0;">
-        <h1 style="color: #2E7D32; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">SP500 Analysis</h1>
+    <div class="hero-container">
+        <h1 style="color: #2E7D32; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">
+            SP500 Analysis
+        </h1>
         <p style="color: #666666; font-size: 1.2rem; max-width: 800px;">
-            This page presents an analysis of the S&P 500 index with respect to key economic indicators. The goal is to explore the relationships between macroeconomic data and market performance, offering insights 
-            that may inform strategic investment decisions.
+            Comprehensive analysis of SP500 and economic indicators for informed decision-making.
         </p>
     </div>
 """, unsafe_allow_html=True)
 
-# Define plot descriptions
-PLOT_DESCRIPTIONS = {
-    "sp500_gdp_mom.html": """
-        The analysis demonstrates a strong correlation between the S&P 500 performance and U.S. GDP growth.
-        Historical data reveals that movements in either often provide a directional bias for the other, 
-        making GDP a useful indicator for market positioning.
-    """,
-    
-    "sp500_cpi_mom.html": """
-        The correlation between the S&P 500 and CPI shows a general upward trend, though the relationship is looser.
-        This suggests that while there is some level of alignment, other factors should also be considered in analysis.
-    """,
-    
-    "sp500_ppi_mom.html": """
-        A more random and loosely correlated movement is observed here. While PPI impacts inflation trends, 
-        its relationship with the S&P 500 appears inconsistent and should be interpreted with caution.
-    """,
-    
-    "sp500_unemp_mom.html": """
-        Visually, the line plots provide no significant correlation between unemployment figures and the 
-        S&P 500 performance in this analysis.
-        However, the momentum indicator is a good confirmation indicator.
-    """,
-    
-    "sp500_ir_mom.html": """
-        A strong correlation is evident between interest rates and S&P 500 performance, with interest rates often acting 
-        as a leading indicator. This relationship can be leveraged to anticipate market movements, offering valuable 
-        forward-looking insights for strategic investment planning.
-    """
-}
+# Main Navigation
+st.markdown('<div class="nav-container">', unsafe_allow_html=True)
+tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Economic Indicators", "Market Analysis", "Reports"])
 
-# Define the plot files, titles, and sizes
-PLOT_FILES = [
-    ("sp500_gdp_mom.html", "SP500 GDP MOM Analysis", 2200, 1000),
-    ("sp500_cpi_mom.html", "SP500 CPI MOM Analysis", 2200, 1000),
-    ("sp500_ppi_mom.html", "SP500 PPI MOM Analysis", 2200, 1000),
-    ("sp500_unemp_mom.html", "SP500 Unemployment MOM Analysis", 2200, 1000),
-    ("sp500_ir_mom.html", "SP500 Interest Rate MOM Analysis", 2200, 1000)
-]
+with tab1:
+    # Filters Row
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        time_period = st.selectbox("Time Period", 
+            ["1M", "3M", "6M", "1Y", "5Y", "MAX"])
+    with col2:
+        chart_type = st.selectbox("Chart Type",
+            ["Line", "Candlestick", "Area", "Bar"])
+    with col3:
+        indicators = st.multiselect("Technical Indicators",
+            ["MA", "RSI", "MACD", "BB"])
+    with col4:
+        st.selectbox("Export Options",
+            ["PDF", "CSV", "Excel", "PNG"])
 
-# Path to the plots folder
-PLOTS_PATH = os.path.join(os.path.dirname(__file__), "..", "plots")
+    # KPI Summary Cards
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric(label="S&P 500", value="6,049.24", delta="1,198.81 (24.72%) Past Year")
+    with col2:
+        st.metric(label="GDP Growth", value="2.5%", delta="0.3%")
+    with col3:
+        st.metric(label="Inflation Rate", value="3.4%", delta="-0.1%")
+    with col4:
+        st.metric(label="Unemployment", value="3.7%", delta="0.0%")
 
-# Display the plots with specified sizes
-for plot_file, plot_title, width, height in PLOT_FILES:
-    plot_path = os.path.join(PLOTS_PATH, plot_file)
-    
-    if os.path.exists(plot_path):
-        with open(plot_path, "rb") as f:
-            html_content = f.read().decode(errors="ignore")
-        
-        st.markdown(f"### {plot_title}")
-        
-        # Add description with styled container
-        if plot_file in PLOT_DESCRIPTIONS:
-            st.markdown(f"""
-                <div style='
-                    padding: 15px;
-                    margin-bottom: 25px;
-                    background-color: #f8f9fa;
-                    border-left: 4px solid #1f77b4;
-                    font-size: 0.95em;
-                    line-height: 1.6;
-                '>
-                    {PLOT_DESCRIPTIONS[plot_file]}
-                </div>
-            """, unsafe_allow_html=True)
-        
-        # Embed the plot dynamically based on width and height
-        html = f'''
-            <div style="
-                width: {width}px;
-                height: {height}px;
-                margin-bottom: 20px;
-                border: 1px solid #ddd;
-                box-shadow: 2px 2px 8px rgba(0,0,0,0.1);
-                overflow: hidden;
-            ">
-                {html_content}
-            </div>
-        '''
-        components.html(html, height=height)
-    else:
-        st.error(f"Plot file '{plot_file}' not found in {PLOTS_PATH}")
+    # Plot Categories
+    plot_category = st.selectbox(
+        "Select Analysis Category",
+        ["GDP Analysis", "Inflation Metrics", "Employment Data", "Interest Rates"]
+    )
 
-# Overview and Implications
+    # Define plot descriptions
+    PLOT_DESCRIPTIONS = {
+        "sp500_gdp_mom.html": """
+            Strong correlation between S&P 500 performance and U.S. GDP growth.
+            Historical data shows GDP as a useful indicator for market positioning.
+        """,
+        "sp500_cpi_mom.html": """
+            Correlation between S&P 500 and CPI shows upward trend with moderate alignment.
+            Other factors should be considered in analysis.
+        """,
+        "sp500_ppi_mom.html": """
+            Looser correlation observed. PPI impacts inflation trends but shows
+            inconsistent relationship with S&P 500.
+        """,
+        "sp500_unemp_mom.html": """
+            Limited correlation between unemployment figures and S&P 500 performance.
+            Momentum indicator serves as confirmation tool.
+        """,
+        "sp500_ir_mom.html": """
+            Strong correlation between interest rates and S&P 500 performance.
+            Interest rates often serve as leading indicator.
+        """
+    }
+
+    # Plot files mapping
+    plot_files = {
+        "GDP Analysis": ["sp500_gdp_mom.html"],
+        "Inflation Metrics": ["sp500_cpi_mom.html", "sp500_ppi_mom.html"],
+        "Employment Data": ["sp500_unemp_mom.html"],
+        "Interest Rates": ["sp500_ir_mom.html"]
+    }
+
+    # Display selected plots
+    for plot_file in plot_files.get(plot_category, []):
+        plot_path = os.path.join(os.path.dirname(__file__), "..", "plots", plot_file)
+        if os.path.exists(plot_path):
+            with open(plot_path, "rb") as f:
+                html_content = f.read().decode(errors="ignore")
+            
+            st.markdown('<div class="plot-container">', unsafe_allow_html=True)
+            st.markdown(f"### {plot_file.replace('.html', '').replace('_', ' ').title()}")
+            if plot_file in PLOT_DESCRIPTIONS:
+                st.info(PLOT_DESCRIPTIONS[plot_file])
+            components.html(html_content, height=800)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+with tab2:
+    st.markdown("### Economic Indicators Analysis")
+    # Add economic indicators content here
+    st.info("Economic indicators analysis content will be displayed here")
+
+with tab3:
+    st.markdown("### Market Analysis")
+    # Add market analysis content here
+    st.info("Market analysis content will be displayed here")
+
+with tab4:
+    st.markdown("### Reports")
+    # Add reports content here
+    st.info("Reports and documentation will be displayed here")
+
+# Data Table Section
+st.markdown("### Historical Data")
+show_data = st.checkbox("Show Raw Data")
+if show_data:
+    st.dataframe({
+        "Date": ["2024-01-22", "2024-01-21", "2024-01-20"],
+        "S&P 500": [4927.23, 4911.95, 4898.67],
+        "GDP": [2.5, 2.5, 2.4],
+        "CPI": [3.4, 3.4, 3.5]
+    })
+
+# Footer
 st.markdown("""
-**Key Takeaways:**
-
-- **Interest Rates**: Strongly correlated with the S&P 500, serving as a potential leading indicator for market performance. 
-- **GDP Growth**: A significant correlation indicates that economic growth trends often mirror S&P 500 performance, providing directional bias for market positioning.
-- **Inflation (CPI and PPI)**: While these metrics show some correlation, the relationship is less defined, suggesting that inflationary trends might influence long term market behavior, but not always predictably.
-- **Unemployment**: Little correlation observed with market performance in the short term, but long-term trends may offer additional conirmation.
-
-**Implications for Decision-Making:**
-- Investors can leverage these relationships to better anticipate market shifts and refine their strategies. 
-- Interest rates, GDP growth, and inflation trends are especially useful for identifying potential changes in market direction.
-- However, caution should be exercised with metrics like unemployment, which show less immediate impact on market movements.
-""")
+---
+<div style="text-align: center; padding: 1rem;">
+    <p style="color: #666666;">Data updated as of {}</p>
+    <p style="color: #666666; font-size: 0.8rem;">
+        Sources: Federal Reserve Economic Data (FRED), Bureau of Labor Statistics (BLS), 
+        Bureau of Economic Analysis (BEA)
+    </p>
+</div>
+""".format(current_time.strftime('%Y-%m-%d %H:%M UTC')), unsafe_allow_html=True)

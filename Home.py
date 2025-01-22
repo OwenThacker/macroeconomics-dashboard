@@ -22,20 +22,27 @@ def image_to_base64(image_path):
 # Get the base64 encoded image
 image_base64 = image_to_base64(image_path)
 
-# Reuse the same CSS styles from the economic page with additional homepage-specific styles
 st.markdown(f"""
     <style>
+        /* Apply scaling to the entire page */
+        .main {{
+            transform: scale(0.8);
+            transform-origin: 0 0;
+            width: 125%;
+            height: 125%;
+        }}
+
         /* Sidebar Styles */
         [data-testid="stSidebar"] {{
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
         }}
-        
+
         .main {{
             background-color: #FFFFFF;
         }}
-        
+
         /* Hero Section Styles */
         .hero-container {{
             position: relative;
@@ -64,7 +71,7 @@ st.markdown(f"""
             z-index: 2; /* Ensure the title is above the image */
             margin-top: -40rem;
         }}
-        
+
         .company-subtitle {{
             font-size: 2rem;
             color: #2E7D32;
@@ -72,7 +79,7 @@ st.markdown(f"""
             margin: 0 auto;
             z-index: 2;
         }}
-        
+
         /* Market Insight Cards (Market Pulse Cards) */
         .insight-grid {{
             display: grid;
@@ -81,7 +88,7 @@ st.markdown(f"""
             padding: 2rem 0;
             margin-top: -25rem;
         }}
-        
+
         .insight-card {{
             background: #FFFFFF;
             border-radius: 12px;
@@ -91,24 +98,24 @@ st.markdown(f"""
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             cursor: pointer;
         }}
-        
+
         .insight-card:hover {{
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
         }}
-        
+
         .insight-title {{
             font-size: 1.2rem;
             color: #2E7D32;
             font-weight: 600;
         }}
-        
+
         .insight-content {{
             font-size: 1.0rem;
             color: #262626;
             margin-top: 0.5rem;
         }}
-        
+
         .insight-footer {{
             font-size: 0.9rem;
             color: #90A4AE;
@@ -116,7 +123,7 @@ st.markdown(f"""
             justify-content: space-between;
             margin-top: 1rem;
         }}
-        
+
         .insight-impact {{
             color: #2E7D32;
             font-weight: 600;
@@ -135,14 +142,14 @@ st.markdown(f"""
             padding: 4rem 2rem;
             margin: 2rem 0;
         }}
-        
+
         .feature-grid {{
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 2rem;
             margin-top: 2rem;
         }}
-        
+
         .feature-card {{
             background: #FFFFFF;
             border-radius: 12px;
@@ -151,12 +158,13 @@ st.markdown(f"""
             border: 1px solid #E0E0E0;
             transition: all 0.3s ease;
         }}
-        
+
         .feature-card:hover {{
             border-color: #2E7D32;
         }}
     </style>
 """, unsafe_allow_html=True)
+
 
 # Sidebar Configuration
 with st.sidebar:

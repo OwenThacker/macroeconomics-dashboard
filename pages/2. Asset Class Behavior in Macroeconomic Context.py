@@ -219,8 +219,13 @@ if secondary_plot:
 load_html_plot(selected_plot[0])  # Load primary plot
 
 # Footer
-st.markdown(f"""
-    <div style="text-align: center; padding: 1rem; background-color: #F8FAF8; margin-top: 2rem; border-top: 1px solid #E0E0E0;">
-        Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
-    </div>
-""", unsafe_allow_html=True)
+st.markdown("""
+---
+<div style="text-align: center; padding: 1rem;">
+    <p style="color: #666666;">Data updated as of {}</p>
+    <p style="color: #666666; font-size: 0.8rem;">
+        Sources: Federal Reserve Economic Data (FRED), Bureau of Labor Statistics (BLS), 
+        Bureau of Economic Analysis (BEA)
+    </p>
+</div>
+""".format(current_time.strftime('%Y-%m-%d %H:%M UTC')), unsafe_allow_html=True)
