@@ -1,11 +1,14 @@
 import streamlit as st
-from datetime import datetime
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+import streamlit.components.v1 as components
 import os
 import base64
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Alterra | Home",
+    page_title="Alterra | Economic Overview Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -24,6 +27,14 @@ image_base64 = image_to_base64(image_path)
 
 st.markdown(f"""
     <style>
+    
+        .stApp > div {{
+            transform: scale(0.67);
+            transform-origin: top center;
+            width: 200%; /* Compensate for scaling down */
+            height: 150%;
+            margin-left: -33%; /* Adjust negative margin to shift content right */
+        }}
 
         /* Sidebar Styles */
         [data-testid="stSidebar"] {{
@@ -62,7 +73,7 @@ st.markdown(f"""
             letter-spacing: -1px;
             margin-bottom: 1rem;
             z-index: 2; /* Ensure the title is above the image */
-            margin-top: -40rem;
+            margin-top: -30rem;
         }}
 
         .company-subtitle {{
@@ -85,11 +96,18 @@ st.markdown(f"""
         .insight-card {{
             background: #FFFFFF;
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 0.5rem;
             border: 1px solid #E0E0E0;
             transition: all 0.3s ease;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             cursor: pointer;
+        }}
+
+        [data-testid="stSidebar"] .insight-card {{
+            width: calc(150%); /* Full width minus padding */
+            box-sizing: border-box;
+            margin: 0.5rem 1rem;
+            margin-left: 0.2rem;
         }}
 
         .insight-card:hover {{
@@ -155,8 +173,10 @@ st.markdown(f"""
         .feature-card:hover {{
             border-color: #2E7D32;
         }}
+
     </style>
 """, unsafe_allow_html=True)
+
 
 
 # Sidebar Configuration
@@ -283,7 +303,7 @@ st.markdown("""
 st.markdown("""
     <div style="padding: 0rem 0;"> <!-- Adjust padding above the header -->
     <!-- Market Insights Header -->
-    <h2 class="market-insights-header" style="color: #2E7D32; font-size: 2rem; margin-bottom: 0.5rem; margin-top: -20rem;">
+    <h2 class="market-insights-header" style="color: #2E7D32; font-size: 2rem; margin-bottom: 0.5rem; margin-top: -15rem;">
         Top 5 Market Insights This Quarter
     </h2>
     <!-- Insight Cards Grid -->

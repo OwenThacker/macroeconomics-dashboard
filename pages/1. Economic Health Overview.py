@@ -13,109 +13,233 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS to scale content dynamically based on screen size
-st.markdown("""
+# Get the absolute path to the image file
+image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
+
+# Function to encode image to base64
+def image_to_base64(image_path):
+    with open(image_path, "rb") as img_file:
+        encoded_image = base64.b64encode(img_file.read()).decode()
+    return f"data:image/png;base64,{encoded_image}"
+
+# Get the base64 encoded image
+image_base64 = image_to_base64(image_path)
+
+st.markdown(f"""
     <style>
-        
-        /* Sidebar styling */
-        [data-testid="stSidebar"] {
+    
+        .stApp > div {{
+            transform: scale(0.67);
+            transform-origin: top center;
+            width: 200%; /* Compensate for scaling down */
+            height: 150%;
+            margin-left: -33%; /* Adjust negative margin to shift content right */
+        }}
+
+        /* Sidebar Styles with Toggle */
+        [data-testid="stSidebar"] {{
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
-            position: fixed;
-            z-index: 99;
-        }
-        
-        /* Market Insight Card Styles */
-        .insight-card {
+            transition: width 0.3s ease, transform 0.3s ease;
+        }}
+
+        /* Sidebar Toggle Styles */
+        .sidebar-toggle {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            z-index: 1000;
+            background: #F0F0F0;
+            border-radius: 50%;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+
+        .sidebar-toggle svg {{
+            width: 24px;
+            height: 24px;
+            fill: #2E7D32;
+        }}
+
+        /* Collapsed State */
+        .collapsed [data-testid="stSidebar"] {{
+            width: 0 !important;
+            overflow: hidden;
+            transform: translateX(-100%);
+        }}
+
+        .main {{
+            background-color: #FFFFFF;
+        }}
+
+        /* Hero Section Styles */
+        .hero-container {{
+            position: relative;
+            padding: 6rem 2rem;
+            text-align: center;
+            margin: -4rem -4rem 1rem -4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            background-image: url("{{image_base64}}");
+            background-size: 100% 80%; /* Adjust the size of the image vertically */
+            background-position: center 0%; /* Move the image down */
+            background-repeat: no-repeat;
+        }}
+
+        /* Hero Title Styles */
+        .company-title {{
+            font-size: 6rem;
+            font-weight: 700;
+            color: #2E7D32; /* Dark green title */
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+            z-index: 2; /* Ensure the title is above the image */
+            margin-top: -40rem;
+        }}
+
+        .company-subtitle {{
+            font-size: 2rem;
+            color: #2E7D32;
+            max-width: 800px;
+            margin: 0 auto;
+            z-index: 2;
+        }}
+
+        /* Market Insight Cards (Market Pulse Cards) */
+        .insight-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 0;
+            margin-top: -25rem;
+        }}
+
+        .insight-card {{
             background: #FFFFFF;
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 0.5rem;
             border: 1px solid #E0E0E0;
             transition: all 0.3s ease;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            margin-bottom: 1rem;
-        }
-        
-        .insight-card:hover {
+        }}
+
+        [data-testid="stSidebar"] .insight-card {{
+            width: calc(150%); /* Full width minus padding */
+            box-sizing: border-box;
+            margin: 0.5rem 1rem;
+            margin-left: 0.2rem;
+        }}
+
+        .insight-card:hover {{
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }
-        
-        .insight-title {
+        }}
+
+        .insight-title {{
             font-size: 1.2rem;
             color: #2E7D32;
             font-weight: 600;
-        }
-        
-        .insight-content {
+        }}
+
+        .insight-content {{
             font-size: 1.0rem;
             color: #262626;
             margin-top: 0.5rem;
-        }
-        
-        .insight-footer {
+        }}
+
+        .insight-footer {{
             font-size: 0.9rem;
             color: #90A4AE;
             display: flex;
             justify-content: space-between;
             margin-top: 1rem;
-        }
-        
-        .insight-impact {
+        }}
+
+        .insight-impact {{
             color: #2E7D32;
             font-weight: 600;
-        }
-        
-        /* Table styling */
-        table.dataframe tbody tr:nth-child(odd) {
-            background-color: #F8F9FA;
-        }
-        table.dataframe tbody tr:nth-child(even) {
-            background-color: #FFFFFF;
-        }
-        table.dataframe thead th {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #2E7D32;
-        }
-        table.dataframe tbody td {
-            font-size: 0.9rem;
-            padding: 8px;
-        }
-        
-        /* Plot container styles */
-        .plot-container {
-            width: 100%;
-            margin: 0 auto;
-            overflow: hidden;
-        }
-        
-        .plot-container iframe {
-            width: 100% !important;
-            border: none !important;
-        }
-        
-        /* Utility classes */
-        .content-padding {
-            padding: 1rem;
-        }
-        
-        /* Remove column padding */
-        .stColumns > div {
-            padding: 0 !important;
-        }
-        
-        /* Remove element margins */
-        .element-container {
-            margin: 0 !important;
-        }
+        }}
+
+        /* Market Insights header */
+        .market-insights-header {{
+            margin-bottom: 0.5rem;
+            margin-top: -25rem;
+        }}
+
+        /* About Section */
+        .about-section {{
+            background: #F8F9FA;
+            border-radius: 16px;
+            padding: 4rem 2rem;
+            margin: 2rem 0;
+        }}
+
+        .feature-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }}
+
+        .feature-card {{
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #E0E0E0;
+            transition: all 0.3s ease;
+        }}
+
+        .feature-card:hover {{
+            border-color: #2E7D32;
+        }}
+
+        .plot-container {{
+            margin-left: -50rem; /* Adjust this value to move left more or less */
+            width: calc(100% 0rem); /* Compensate for the margin */
+        }}
+
+            
+        <script>
+        document.addEventListener('DOMContentLoaded', (event) => {{
+            // Create toggle button
+            const sidebarToggle = document.createElement('div');
+            sidebarToggle.className = 'sidebar-toggle';
+            sidebarToggle.innerHTML = `
+                <svg viewBox="0 0 24 24">
+                    <path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/>
+                </svg>
+            `;
+            
+            // Add click event to toggle sidebar
+            sidebarToggle.addEventListener('click', () => {{
+                document.body.classList.toggle('collapsed');
+            }});
+            
+            // Find the sidebar and append the toggle button
+            const sidebar = document.querySelector('[data-testid="stSidebar"]');
+            if (sidebar) {{
+                sidebar.appendChild(sidebarToggle);
+            }}
+        }});
+        </script>
+
     </style>
 """, unsafe_allow_html=True)
 
+
 # Sidebar Configuration
 with st.sidebar:
+    
     st.markdown("""
         <div style="text-align: center; padding: 1rem 0;">
             <h1 style="color: #2E7D32; font-size: 1.8rem; font-weight: 600;">ALTERRA</h1>
@@ -185,65 +309,27 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Function to create dynamic plot scaling
-def create_plot_scaling_script():
-    return """
-        <script>
-            function adjustPlotSize() {
-                const plots = document.querySelectorAll('.plot-container iframe');
-                plots.forEach(plot => {
-                    const container = plot.parentElement;
-                    const availableWidth = container.offsetWidth;
-                    
-                    // Calculate scale based on available width
-                    const scale = availableWidth / 2400;
-                    
-                    // Apply the transform
-                    plot.style.transform = `scale(${scale})`;
-                    plot.style.transformOrigin = '0 0';
-                    
-                    // Adjust container height to match scaled content
-                    const scaledHeight = plot.offsetHeight * scale;
-                    container.style.height = `${scaledHeight}px`;
-                });
-            }
-            
-            // Run on load
-            window.addEventListener('load', adjustPlotSize);
-            
-            // Run on resize
-            window.addEventListener('resize', adjustPlotSize);
-            
-            // Additional trigger for Streamlit's dynamic updates
-            new MutationObserver(function(mutations) {
-                adjustPlotSize();
-            }).observe(document.body, {
-                attributes: true,
-                childList: true,
-                subtree: true
-            });
-        </script>
-    """
-
 # Modified load_html_plot function
-def load_html_plot(plot_file, height=600):
+def load_html_plot(plot_file, height=1000):
     try:
         plot_path = os.path.join("plots", plot_file)
         with open(plot_path, 'r', encoding='utf-8') as f:
-            plot_html = f.read()
+            html_content = f.read()
             
-            # Wrap plot in container with scaling
-            responsive_plot = f"""
-                <div class="plot-container">
-                    {plot_html}
-                </div>
-                {create_plot_scaling_script()}
-            """
-            
-            components.html(responsive_plot, height=height)
+        st.markdown('<div class="plot-container">', unsafe_allow_html=True)
+        html_base64 = base64.b64encode(html_content.encode('utf-8')).decode('utf-8')
+        components.html(
+            f"""
+            <iframe src="data:text/html;base64,{html_base64}" 
+                    width="2400" height="1200" style="border: none !important;"></iframe>
+            """, 
+            height=height
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+    except FileNotFoundError:
+        st.error(f"Plot '{plot_file}' not found.")
     except Exception as e:
-        st.error(f"Unable to load plot: {str(e)}")
-        st.info("Plot visualization is temporarily unavailable")
+        st.error(f"Error loading plot: {e}")
 
 # Display plot
 st.markdown("### Economic Health Score")
@@ -352,72 +438,40 @@ if selected_data_type == "PCA - Indicators Influence on Expenditures":
         key="region_selector"
     )
 
-
-
-# Function to create plot scaling script
-def create_plot_scaling_script():
-    return """
-        <script>
-            function adjustPlotSize() {
-                const plots = document.querySelectorAll('.plot-container iframe');
-                plots.forEach(plot => {
-                    const container = plot.parentElement;
-                    const availableWidth = container.offsetWidth;
-                    const scale = availableWidth / 2400;
-                    
-                    plot.style.transform = `scale(${scale})`;
-                    plot.style.transformOrigin = '0 0';
-                    
-                    const scaledHeight = plot.offsetHeight * scale;
-                    container.style.height = `${scaledHeight}px`;
-                });
-            }
-            
-            // Run on load
-            window.addEventListener('load', adjustPlotSize);
-            
-            // Run on resize
-            window.addEventListener('resize', adjustPlotSize);
-            
-            // Handle Streamlit's dynamic updates
-            new MutationObserver(function(mutations) {
-                adjustPlotSize();
-            }).observe(document.body, {
-                attributes: true,
-                childList: true,
-                subtree: true
-            });
-        </script>
-    """
-
-# Modified load_html_plot function
-def load_html_plot(plot_name):
+# Dynamically sized plot loading function
+def load_html_plot(plot_name, max_width=3000, dynamic_height=True):
     try:
         plot_path = os.path.join("plots", f"{plot_name}.html")
         with open(plot_path, "r", encoding="utf-8") as f:
             plot_html = f.read()
 
-            # Dynamic height adjustment
+        # Dynamic height adjustment based on content type
+        height = 800  # Default height
+        if dynamic_height:
             if "PCA" in plot_name:
-                height = 2200
+                height = 2000
             elif "gdp" in plot_name or "voli" in plot_name or "vole" in plot_name or "inf" in plot_name or "unemp" in plot_name or "toti" in plot_name:
-                height = 1600
+                height = 1200
             else:
-                height = 3000
+                height = 1000
 
-            # Wrap plot in responsive container with styling
-            responsive_html = f"""
-            <div class="plot-container">
-                <div style="border: 1px solid #E0E0E0; border-radius: 12px; padding: 1rem; background-color: #FFFFFF;">
-                    {plot_html}
-                </div>
-            </div>
-            {create_plot_scaling_script()}
-            """
-            components.html(responsive_html, height=height)
+        # Embed the plot using an iframe with responsive width
+        st.markdown('<div class="plot-container" style="overflow-x: auto;">', unsafe_allow_html=True)
+        html_base64 = base64.b64encode(plot_html.encode('utf-8')).decode('utf-8')
+        components.html(
+            f"""
+            <iframe src="data:text/html;base64,{html_base64}" 
+                    width="100%" style="max-width:{max_width}px; border: none !important;" height="{height}">
+            </iframe>
+            """, 
+            height=height
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
     except FileNotFoundError:
         st.error(f"Plot '{plot_name}' not found.")
     except Exception as e:
+        st.error(f"Error loading plot: {e}")
+
         st.error(f"Error loading plot: {e}")
 
 # Display plot based on selection

@@ -1,12 +1,12 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import pandas as pd
 import os
-import base64
 from datetime import datetime
+import base64
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Economic Health Dashboard",
+    page_title="Alterra | Feedback",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -23,22 +23,23 @@ def image_to_base64(image_path):
 # Get the base64 encoded image
 image_base64 = image_to_base64(image_path)
 
-# Reuse the same CSS styles from the economic page with additional homepage-specific styles
+# Styling (matching the economic page)
 st.markdown(f"""
     <style>
-        /* Sidebar Styles */
+        .stApp > div {{
+            transform: scale(0.67);
+            transform-origin: top center;
+            width: 200%;
+            height: 150%;
+            margin-left: -33%;
+        }}
+
         [data-testid="stSidebar"] {{
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
-            width: 250px;  /* Adjusted width */
         }}
-        
-        .main {{
-            background-color: #FFFFFF;
-        }}
-        
-        /* Hero Section Styles */
+
         .hero-container {{
             position: relative;
             padding: 6rem 2rem;
@@ -51,66 +52,57 @@ st.markdown(f"""
             height: 100vh;
             color: white;
             background-image: url("{image_base64}");
-            background-size: 100% 80%; /* Adjust the size of the image vertically */
-            background-position: center 0%; /* Move the image down */
+            background-size: 100% 80%;
+            background-position: center 0%;
             background-repeat: no-repeat;
         }}
 
-        /* Hero Title Styles */
         .company-title {{
             font-size: 6rem;
             font-weight: 700;
-            color: #2E7D32; /* Dark green title */
-            letter-spacing: -1px;
-            margin-bottom: 1rem;
-            z-index: 2; /* Ensure the title is above the image */
-            margin-top: -40rem;
-        }}
-        
-        .company-subtitle {{
-            font-size: 2rem;
             color: #2E7D32;
-            max-width: 800px;
-            margin: 0 auto;
+            letter-spacing: -1px;
+            margin-bottom: 0rem;
             z-index: 2;
+            position: relative; /* Change absolute to relative to prevent overlap */
+            margin-top: 0; /* Remove excessive negative margin */
+            padding-top: 4rem; /* Add padding to create spacing from the background */
         }}
-        
-        /* Market Insight Cards (Market Pulse Cards) */
-        .insight-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            padding: 2rem 0;
-            margin-top: -25rem;
-        }}
-        
+
         .insight-card {{
             background: #FFFFFF;
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 0.5rem;
             border: 1px solid #E0E0E0;
             transition: all 0.3s ease;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             cursor: pointer;
         }}
-        
+
+        [data-testid="stSidebar"] .insight-card {{
+            width: calc(150%); /* Full width minus padding */
+            box-sizing: border-box;
+            margin: 0.5rem 1rem;
+            margin-left: 0.2rem;
+        }}
+
         .insight-card:hover {{
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
         }}
-        
+
         .insight-title {{
             font-size: 1.2rem;
             color: #2E7D32;
             font-weight: 600;
         }}
-        
+
         .insight-content {{
             font-size: 1.0rem;
             color: #262626;
             margin-top: 0.5rem;
         }}
-        
+
         .insight-footer {{
             font-size: 0.9rem;
             color: #90A4AE;
@@ -118,89 +110,49 @@ st.markdown(f"""
             justify-content: space-between;
             margin-top: 1rem;
         }}
-        
+
         .insight-impact {{
             color: #2E7D32;
             font-weight: 600;
         }}
-
-        /* Market Insights header */
-        .market-insights-header {{
-            margin-bottom: 0.5rem;
-            margin-top: -25rem;
-        }}
-
-        /* About Section */
-        .about-section {{
-            background: #F8F9FA;
-            border-radius: 16px;
-            padding: 4rem 2rem;
-            margin: 2rem 0;
-        }}
-        
-        .feature-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }}
-        
-        .feature-card {{
-            background: #FFFFFF;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            border: 1px solid #E0E0E0;
-            transition: all 0.3s ease;
-        }}
-        
-        .feature-card:hover {{
-            border-color: #2E7D32;
-        }}
-        
-        /* Sidebar Styling */
-        [data-testid="stSidebar"] {{
-            background-color: #FAFAFA;
-            border-right: 1px solid #E0E0E0;
-            padding-top: 1rem;
-            width: 250px;  /* Sidebar width adjustment */
-        }}
-
-        .stSidebar h1 {{
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #2E7D32;
-            text-align: center;
-        }}
-
-        .stSidebar p {{
-            color: #90A4AE;
-            margin-top: 0.5rem;
-            text-align: center;
-        }}
-
-        /* Dropdown Styling */
-        .stSelectbox div[data-baseweb="select"] {{
-            border: none;  /* Remove the border */
+        .stTextArea textarea {{
+            border: 1px solid #2E7D32;
             border-radius: 8px;
-            padding: 0.4rem;  /* Adjust padding for better fit */
-            font-size: 1rem;  /* Make text clearer */
-            color: #2E7D32;   /* Green text color */
-            background-color: #FFFFFF; /* Ensure white background */
         }}
 
-        .stSelectbox div[data-baseweb="select"]:focus-within {{
-            outline: none;  /* Remove the default blue outline */
-            box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.5);  /* Green shadow on focus */
+        .stRadio div {{
+            color: #2E7D32;
         }}
 
-        .stSelectbox div[data-baseweb="select"] > div {{
-            border: none !important;  /* Remove any border around dropdown */
+        .stButton button {{
+            background-color: #2E7D32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
         }}
 
-        .stSelectbox label {{
-            margin-bottom: 0.2rem !important;  /* Reduce gap around label */
+        /* Top Left Alterra Branding */
+        .top-left-brand {{
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            z-index: 1000;
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2E7D32;
+            letter-spacing: -1px;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }}
+
+        /* Adjust main content to not overlap with brand */
+        .main-content {{
+            margin-top: 6rem;
+        }}
+
     </style>
 """, unsafe_allow_html=True)
 
@@ -231,7 +183,7 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # Market Insights
-    st.markdown("### Market Insights", unsafe_allow_html=True)
+    st.markdown("### Market Insights")
     insights = [
         {
             "title": "Energy Impact Alert",
@@ -265,85 +217,76 @@ with st.sidebar:
             </div>
         """, unsafe_allow_html=True)
 
+# Add Alterra branding at top left
+st.markdown('<div class="company-title">ALTERRA</div>', unsafe_allow_html=True)
 
-# Main Content Header
+# Feedback Section
 st.markdown("""
-    <div style="padding: 1rem 0 2rem 0;">
-        <h1 style="color: #2E7D32; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Feedback</h1>
-        <p style="color: #666666; font-size: 1.2rem; max-width: 800px;">
-            We value your feedback.
-        </p>
+    <div style="margin-top: -2rem; margin-left: -2rem; padding: 2rem;">
+        <div class="insight-card">
+            <div class="insight-title">Help Us Improve</div>
+            <div class="insight-content">
+                We're committed to providing the most valuable economic intelligence platform. 
+                Your feedback helps us understand how we can better serve your needs.
+            </div>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
-# Initialize feedback storage
-FEEDBACK_FILE = "feedback_data.csv"
-if not os.path.exists(FEEDBACK_FILE):
-    pd.DataFrame(columns=["User Profile", "Question", "Response"]).to_csv(FEEDBACK_FILE, index=False)
-
-# Define Sections and Questions
-sections = {
-    "About You": [
-        ("Which best describes you?", ["Firm Owner", "Investment Manager", "Research Analyst", "Investor", "Other"]),
-        ("Please briefly describe your role and objectives when using such a platform.", "text_area")
-    ],
-    "Platform Potential": [
-        ("What would make a platform like this indispensable to your work?", "text_area"),
-        ("What specific data or insights would you expect from a platform like this?", "text_area"),
-        ("How frequently would you use a platform providing detailed macroeconomic insights?", ["Daily", "Weekly", "Monthly", "Rarely"])
-    ],
-    "Desired Features": [
-        ("What key features would you like to see implemented in the future?", "text_area"),
-        ("Which asset classes or economic indicators are most important to you?", ["Equities", "Bonds", "Commodities", "Currencies", "Real Estate", "Other"])
-    ],
-    "Value Proposition": [
-        ("What would make you consider subscribing to this platform?", "text_area"),
-        ("Would tailored insights/reports for your specific needs be valuable to you?", ["Yes", "No", "Maybe"])
-    ]
-}
-
 # Feedback Form
+FEEDBACK_FILE = "user_feedback.csv"
+if not os.path.exists(FEEDBACK_FILE):
+    pd.DataFrame(columns=["Timestamp", "User Type", "Platform Value", "Additional Comments"]).to_csv(FEEDBACK_FILE, index=False)
+
 with st.form("feedback_form"):
-    responses = {}
-
-    for section, questions in sections.items():
-        st.markdown(f"<div class='section-title'>{section}</div>", unsafe_allow_html=True)
-
-        for question, answer_type in questions:
-            st.markdown(f"<div class='question-text'>{question}</div>", unsafe_allow_html=True)
-            if answer_type == "text_area":
-                responses[question] = st.text_area(question, height=100, key=question)
-            else:
-                responses[question] = st.radio(question, answer_type, key=question)
-            st.write("")  # Adds a small space between questions
-
-        st.markdown("<hr>", unsafe_allow_html=True)
-
-    submit = st.form_submit_button("Submit Feedback")
-
-# Handle Submissions
-if submit:
-    feedback_entries = []
-    user_profile = responses.get("Which best describes you?", "N/A")
-    role_description = responses.get("Please briefly describe your role and objectives when using such a platform.", "N/A")
+    st.markdown("<div class='insight-card'>", unsafe_allow_html=True)
     
-    for question, response in responses.items():
-        feedback_entries.append({"User Profile": user_profile, "Question": question, "Response": response})
-    
-    # Save responses to CSV
-    feedback_df = pd.read_csv(FEEDBACK_FILE)
-    new_feedback = pd.DataFrame(feedback_entries)
-    feedback_df = pd.concat([feedback_df, new_feedback], ignore_index=True)
-    feedback_df.to_csv(FEEDBACK_FILE, index=False)
-    
-    st.success("Thank you for your feedback! Your responses have been recorded.")
-
-# Download Feedback Data
-st.markdown("### Download Feedback Data")
-with open(FEEDBACK_FILE, "rb") as file:
-    st.download_button(
-        label="Download Feedback CSV",
-        data=file,
-        file_name="feedback_data.csv",
-        mime="text/csv"
+    user_type = st.selectbox(
+        "Who are you?", 
+        ["Select your role", "Firm Owner", "Investment Manager", "Research Analyst", "Investor", "Other"]
     )
+    
+    platform_value = st.radio(
+        "Did our platform provide valuable insights?", 
+        ["Highly Valuable", "Somewhat Valuable", "Not Valuable"]
+    )
+    
+    comments = st.text_area(
+        "Any additional thoughts or suggestions?", 
+        height=150, 
+        placeholder="Share your feedback here..."
+    )
+    
+    submit = st.form_submit_button("Submit Feedback")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Handle Submission
+if submit:
+    if user_type == "Select your role":
+        st.error("Please select your role")
+    else:
+        # Prepare feedback data
+        feedback_data = {
+            "Timestamp": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+            "User Type": [user_type],
+            "Platform Value": [platform_value],
+            "Additional Comments": [comments]
+        }
+        
+        # Save to CSV
+        feedback_df = pd.read_csv(FEEDBACK_FILE)
+        new_entry = pd.DataFrame(feedback_data)
+        feedback_df = pd.concat([feedback_df, new_entry], ignore_index=True)
+        feedback_df.to_csv(FEEDBACK_FILE, index=False)
+        
+        st.success("Thank you for your feedback!")
+
+# Footer
+st.markdown(f"""
+    <div style="background: #F8FAFC; padding: 2rem; margin-top: 3rem; text-align: center; border-top: 1px solid #E0E0E0;">
+        <div style="color: #90A4AE; font-size: 0.9rem;">Powered by</div>
+        <div style="color: #2E7D32; font-size: 1.2rem; font-weight: 600; margin-top: 0.5rem;">ALTERRA</div>
+        <div style="color: #90A4AE; font-size: 0.8rem; margin-top: 1rem;">
+            Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}</div>
+    </div>
+""", unsafe_allow_html=True)

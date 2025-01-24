@@ -1,81 +1,179 @@
 import streamlit as st
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 import os
 import base64
-from datetime import datetime
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="Economic Health Dashboard",
+    page_title="Alterra | Economic Overview Dashboard",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Function to encode images to base64
+# Get the absolute path to the image file
+image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
+
+# Function to encode image to base64
 def image_to_base64(image_path):
     with open(image_path, "rb") as img_file:
         encoded_image = base64.b64encode(img_file.read()).decode()
     return f"data:image/png;base64,{encoded_image}"
 
-# Get base64-encoded image
-image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
+# Get the base64 encoded image
 image_base64 = image_to_base64(image_path)
 
-# Updated styling that focuses on the sidebar while preserving your existing styles
-st.markdown("""
+st.markdown(f"""
     <style>
+    
+        .stApp > div {{
+            transform: scale(0.67);
+            transform-origin: top center;
+            width: 200%; /* Compensate for scaling down */
+            height: 150%;
+            margin-left: -33%; /* Adjust negative margin to shift content right */
+        }}
+
         /* Sidebar Styles */
-        [data-testid="stSidebar"] {
+        [data-testid="stSidebar"] {{
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
-        }
-        
-        .main {
+        }}
+
+        .main {{
             background-color: #FFFFFF;
-        }
-        
-        /* Market Insight Card Styles for Sidebar */
-        .insight-card {
+        }}
+
+        /* Hero Section Styles */
+        .hero-container {{
+            position: relative;
+            padding: 6rem 2rem;
+            text-align: center;
+            margin: -4rem -4rem 1rem -4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            background-image: url("{image_base64}");
+            background-size: 100% 80%; /* Adjust the size of the image vertically */
+            background-position: center 0%; /* Move the image down */
+            background-repeat: no-repeat;
+        }}
+
+        /* Hero Title Styles */
+        .company-title {{
+            font-size: 6rem;
+            font-weight: 700;
+            color: #2E7D32; /* Dark green title */
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+            z-index: 2; /* Ensure the title is above the image */
+            margin-top: -40rem;
+        }}
+
+        .company-subtitle {{
+            font-size: 2rem;
+            color: #2E7D32;
+            max-width: 800px;
+            margin: 0 auto;
+            z-index: 2;
+        }}
+
+        /* Market Insight Cards (Market Pulse Cards) */
+        .insight-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem 0;
+            margin-top: -25rem;
+        }}
+
+        .insight-card {{
             background: #FFFFFF;
             border-radius: 12px;
-            padding: 1.5rem;
+            padding: 0.5rem;
             border: 1px solid #E0E0E0;
             transition: all 0.3s ease;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             cursor: pointer;
-            margin-bottom: 1rem;
-        }
-        
-        .insight-card:hover {
+        }}
+
+        [data-testid="stSidebar"] .insight-card {{
+            width: calc(150%); /* Full width minus padding */
+            box-sizing: border-box;
+            margin: 0.5rem 1rem;
+            margin-left: 0.2rem;
+        }}
+
+        .insight-card:hover {{
             transform: translateY(-5px);
             box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }
-        
-        .insight-title {
+        }}
+
+        .insight-title {{
             font-size: 1.2rem;
             color: #2E7D32;
             font-weight: 600;
-        }
-        
-        .insight-content {
+        }}
+
+        .insight-content {{
             font-size: 1.0rem;
             color: #262626;
             margin-top: 0.5rem;
-        }
-        
-        .insight-footer {
+        }}
+
+        .insight-footer {{
             font-size: 0.9rem;
             color: #90A4AE;
             display: flex;
             justify-content: space-between;
             margin-top: 1rem;
-        }
-        
-        .insight-impact {
+        }}
+
+        .insight-impact {{
             color: #2E7D32;
             font-weight: 600;
-        }
+        }}
+
+        /* Market Insights header */
+        .market-insights-header {{
+            margin-bottom: 0.5rem;
+            margin-top: -25rem;
+        }}
+
+        /* About Section */
+        .about-section {{
+            background: #F8F9FA;
+            border-radius: 16px;
+            padding: 4rem 2rem;
+            margin: 2rem 0;
+        }}
+
+        .feature-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }}
+
+        .feature-card {{
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid #E0E0E0;
+            transition: all 0.3s ease;
+        }}
+
+        .feature-card:hover {{
+            border-color: #2E7D32;
+        }}
+
     </style>
 """, unsafe_allow_html=True)
 
