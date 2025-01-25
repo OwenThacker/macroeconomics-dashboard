@@ -482,7 +482,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if selected_data_type == "PCA - Indicators Influence on Expenditures":
-    plot_name = f"{selected_region.lower()}_PCA_I_E"
+    plot_name = f"{selected_region}_PCA_I_E"
     st.write(f"Displaying PCA analysis for **{selected_region}**.")
     load_html_plot(plot_name)
 else:
