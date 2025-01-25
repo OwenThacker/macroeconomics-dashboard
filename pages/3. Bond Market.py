@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 import os
 import base64
+import plotly.graph_objects as go
+import plotly.io as pio
 
 # Configure Streamlit page
 st.set_page_config(
@@ -208,10 +210,6 @@ with col3:
 with col4:
     st.metric(label="2Y-10Y Spread", value="-0.27%", delta="+0.08%")
 
-# Main Navigation - Similar to first code, but bond-focused
-tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Yield Analysis", "Rate Forecasts", "Reports"])
-
-
 def display_plots(plot_files, show_analysis=False):
     
     for plot_file in plot_files:
@@ -230,83 +228,183 @@ def display_plots(plot_files, show_analysis=False):
             except FileNotFoundError:
                 st.error(f"Plot file not found: {plot_file}")
 
+# Extend the tab navigation
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Yield Analysis", "Rate Forecasts", "Scenario Analysis", "Reports"])
+
+# Logic for each tab
 with tab1:
-    # Filters Row
+    # Logic for the "Overview" tab
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        time_period = st.selectbox("Time Period", 
-            ["1D", "1W", "1M", "3M", "6M", "1Y"])
+        time_period = st.selectbox("Time Period", ["1D", "1W", "1M", "3M", "6M", "1Y"])
     with col2:
-        chart_type = st.selectbox("Chart Type",
-            ["Line", "Area", "Scatter", "Bar"])
+        chart_type = st.selectbox("Chart Type", ["Line", "Area", "Scatter", "Bar"])
     with col3:
-        indicators = st.multiselect("Technical Indicators",
-            ["MA", "Bollinger", "RSI", "MACD"])
+        indicators = st.multiselect("Technical Indicators", ["MA", "Bollinger", "RSI", "MACD"])
     with col4:
-        st.selectbox("Export Options",
-            ["PDF", "CSV", "Excel", "PNG"])
-
-    # Add Market Insights Section
-    st.markdown("""
-        <div>
-            <h2 style="color: #2E7D32; font-size: 2rem;">Market Insights</h2>
-            <div class="insight-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                <div class="insight-card">
-                    <div class="insight-title">Yield Curve Recovery</div>
-                    <div class="insight-content">
-                        The yield curve is showing significant recovery from its previous inversion state. 
-                        Currently approaching a flattening point, with the 2Y-10Y spread at -0.27%, 
-                        indicating potential economic stabilization.
-                    </div>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-title">Rate Outlook</div>
-                    <div class="insight-content">
-                        Our interest rate forecasts suggest rates will maintain current levels in the near term. 
-                        The CIR model and Monte Carlo simulations support this stability thesis.
-                    </div>
-                </div>
-                <div class="insight-card">
-                    <div class="insight-title">Key Implications</div>
-                    <div class="insight-content">
-                        <ul>
-                            <li>Reduced recession risk signals from yield curve normalization</li>
-                            <li>Stable rate environment supportive for fixed income positioning</li>
-                            <li>Potential opportunity in intermediate duration bonds</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
-
-    # Show all plots in overview with analysis
+        st.selectbox("Export Options", ["PDF", "CSV", "Excel", "PNG"])
     display_plots(PLOT_CONFIG.keys(), show_analysis=True)
 
 with tab2:
-    yield_plots = [f for f, config in PLOT_CONFIG.items() 
-                   if config["category"] == "Yield Analysis"]
+    # Logic for the "Yield Analysis" tab
+    yield_plots = [f for f, config in PLOT_CONFIG.items() if config["category"] == "Yield Analysis"]
     display_plots(yield_plots, show_analysis=True)
 
 with tab3:
-    forecast_plots = [f for f, config in PLOT_CONFIG.items() 
-                     if config["category"] == "Rate Forecasts"]
+    # Logic for the "Rate Forecasts" tab
+    forecast_plots = [f for f, config in PLOT_CONFIG.items() if config["category"] == "Rate Forecasts"]
     display_plots(forecast_plots, show_analysis=True)
 
+# New Scenario Analysis Tab
 with tab4:
+    st.markdown("""
+        <h2 style="color: #2E7D32; font-size: 2rem;">Scenario Analysis</h2>
+        <p style="color: #666666; font-size: 1.2rem;">
+            Model how random shocks to yield curve factors (e.g., Wiggle, Flex, Twist, Shift) 
+            propagate their impacts across the treasury rates.
+        </p>
+    """, unsafe_allow_html=True)
+
+    # Sidebar-like controls for Scenario Analysis
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        volatility = st.number_input("Volatility (Standard Deviation)", value=1.0, step=0.1, format="%.2f", min_value=0.01)
+    with col2:
+        distribution_type = st.selectbox("Shock Distribution Type", ["Normal", "Uniform"])
+    with col3:
+        num_simulations = st.number_input("Number of Simulations", min_value=100, max_value=5000, value=1000, step=100)
+
+    # Generate Random Shock Vector
+    def generate_shocks(volatility, size, distribution_type):
+        if distribution_type == "Normal":
+            return np.random.normal(0, volatility, size=size)
+        elif distribution_type == "Uniform":
+            return np.random.uniform(-volatility, volatility, size=size)
+
+    # Create a placeholder covariance matrix and transformation matrix
+    np.random.seed(42)  # For reproducibility
+    rates_columns = ["1Y", "2Y", "5Y", "10Y", "30Y"]
+    C = np.cov(np.random.rand(5, len(rates_columns)))  # Example covariance matrix
+    eigenvalues, eigenvectors = np.linalg.eig(C)
+    lambda_sqrt = np.sqrt(eigenvalues)
+    eigv_decomp = np.diag(lambda_sqrt)
+    B = eigv_decomp @ eigenvectors.T
+    B = pd.DataFrame(data=B[:4] * 100, index=["Wiggle", "Flex", "Twist", "Shift"], columns=rates_columns)
+
+    # Run multiple simulations and store results
+    all_impacts = []
+    for _ in range(num_simulations):
+        Random_Shock = generate_shocks(volatility=volatility, size=(4,), distribution_type=distribution_type)
+        impacts = Random_Shock @ B.values
+        all_impacts.append(impacts)
+
+    # Convert impacts to a numpy array for easier manipulation
+    all_impacts = np.array(all_impacts)
+
+    # Calculate the mean and standard deviation of the impacts
+    avg_impacts = np.mean(all_impacts, axis=0)
+    std_impacts = np.std(all_impacts, axis=0)
+
+
+    # Create a sophisticated color palette
+    colors = ['#2E7D32', '#388E3C', '#43A047', '#4CAF50', '#66BB6A']
+
+    # Create figure with subplots for more detailed visualization
+    fig = go.Figure()
+
+    # Average Impact Trace with sophisticated styling
+    fig.add_trace(
+        go.Bar(
+            x=rates_columns,
+            y=avg_impacts,
+            name='Average Impact',
+            text=[f"{val:.2f}" for val in avg_impacts],
+            textposition='outside',
+            marker=dict(
+                color=colors,
+                line=dict(color='darkgreen', width=1.5),
+                opacity=0.8
+            ),
+            hovertemplate='<b>%{x}</b><br>Avg Impact: %{y:.2f} bps<extra></extra>',
+            width=0.6
+        )
+    )
+
+    # Standard Deviation Trace
+    fig.add_trace(
+        go.Scatter(
+            x=rates_columns,
+            y=std_impacts,
+            mode='markers+lines',
+            name='Std Deviation',
+            line=dict(color='rgba(46, 125, 50, 0.5)', dash='dot', width=2),
+            marker=dict(
+                color='rgba(46, 125, 50, 0.7)', 
+                size=10, 
+                symbol='diamond',
+                line=dict(color='darkgreen', width=1.5)
+            ),
+            hovertemplate='<b>%{x}</b><br>Std Dev: %{y:.2f} bps<extra></extra>'
+        )
+    )
+
+    # Enhanced layout
+    fig.update_layout(
+        title={
+            'text': 'Impact of Random Shocks on Treasury Rates',
+            'y':0.95,
+            'x':0.5,
+            'xanchor': 'center', 
+            'yanchor': 'top',
+            'font': dict(size=24, color='#2E7D32')
+        },
+        xaxis_title='Treasury Rates',
+        yaxis_title='Impact (Basis Points)',
+        template='plotly_white',
+        width=2800,  # Wide format
+        height=600,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="center",
+            x=0.5
+        ),
+        plot_bgcolor='rgba(240,248,255,0.5)',
+        paper_bgcolor='white',
+    )
+
+    # Style enhancements
+    fig.update_xaxes(
+        showline=True, 
+        linewidth=2, 
+        linecolor='lightgray', 
+        gridcolor='lightgray'
+    )
+    fig.update_yaxes(
+        showline=True, 
+        linewidth=2, 
+        linecolor='lightgray', 
+        gridcolor='lightgray'
+    )
+
+    # Display the Plotly chart
+    st.plotly_chart(fig, use_container_width=False)
+
+    # Optionally show the transformation matrix
+    if st.checkbox("Show Transformation Matrix"):
+        st.dataframe(B)
+
+    # Optionally display raw shock values for the first simulation
+    if st.checkbox("Show Raw Shocks (First Simulation)"):
+        st.write("Random Shock Vector (First Simulation):", all_impacts[0])
+
+
+with tab5:
+    # Logic for the "Reports" tab
     st.markdown("### Reports")
     st.info("Bond market reports and documentation will be displayed here")
 
-# Data Table Section
-st.markdown("### Historical Data")
-show_data = st.checkbox("Show Raw Data")
-if show_data:
-    st.dataframe({
-        "Date": ["2024-01-22", "2024-01-21", "2024-01-20"],
-        "10Y": [3.85, 3.80, 3.75],
-        "2Y": [4.12, 4.15, 4.18],
-        "Spread": [-0.27, -0.35, -0.43]
-    })
 
 # Footer
 st.markdown("""
