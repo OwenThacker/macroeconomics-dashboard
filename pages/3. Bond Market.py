@@ -7,6 +7,7 @@ import os
 import base64
 import plotly.graph_objects as go
 import plotly.io as pio
+from openbb import obb
 
 # Configure Streamlit page
 st.set_page_config(
@@ -136,25 +137,25 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # Market Insights
-    st.markdown("### Market Insights")
+    st.markdown("### Top New Market Insights", unsafe_allow_html=True)
     insights = [
         {
-            "title": "Energy Impact Alert",
-            "content": "Energy prices surge 15% - logistics sector under pressure",
-            "trend": "↗️ Rising",
+            "title": "Global Tech Sell Off",
+            "content": "Investor concern with the new release of China's DeepSeek model. Nvidia falls 14% in premarket trading",
+            "trend": "↘️ Falling",  # Changed to diagonal downward arrow
             "impact": "High"
         },
         {
-            "title": "Supply Chain Update",
-            "content": "Regional commerce shows 20% growth in Q1",
-            "trend": "↗️ Growing",
-            "impact": "Medium"
+            "title": "Fed Holding Rates",
+            "content": "Fed rate cut 'probably not until the second half of the year' says economist Odeta Kushi of First American",
+            "trend": "→ Stable",
+            "impact": "High"
         },
         {
-            "title": "Tech Sector Analysis",
-            "content": "Enterprise solutions maintain 12% growth rate",
-            "trend": "→ Stable",
-            "impact": "Moderate"
+            "title": "Highest interest rates in Japan in 17 Years",
+            "content": "BoJ raises short-term policy rate 25 bps to 0.5% from 0.25%, causing a jump in the Yen",
+            "trend": "↗️ Growing",
+            "impact": "High"
         }
     ]
     
@@ -199,16 +200,50 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Quick Stats (Like first code, but bond-focused)
+# Assuming `rates` dataframe is already loaded, e.g., like this:
+rates  = (
+    obb
+    .fixedincome
+    .government
+    .treasury_rates(
+        start_date="2020-01-01"
+    )
+    .to_df()
+    .dropna()
+    .div(100)
+)
+
+# Get the latest and previous rows of rates
+latest_rates = rates.iloc[-1]  # Most recent day
+previous_rates = rates.iloc[-2]  # Previous day
+
+# Extract specific rates and calculate percentage change
+YR2_rate = latest_rates["year_2"] * 10000
+YR2_delta = ((latest_rates["year_2"] - previous_rates["year_2"]) / previous_rates["year_2"]) * 100
+
+YR10_rate = latest_rates["year_10"] * 10000
+YR10_delta = ((latest_rates["year_10"] - previous_rates["year_10"]) / previous_rates["year_10"]) * 100
+
+YR30_rate = latest_rates["year_30"] * 10000
+YR30_delta = ((latest_rates["year_30"] - previous_rates["year_30"]) / previous_rates["year_30"]) * 100
+
+# Calculate the 2Y-10Y Spread and its delta
+YR10_YR2_diff = YR10_rate - YR2_rate
+YR10_YR2_diff_delta = ((YR10_rate - YR2_rate) - (previous_rates["year_10"] * 10000 - previous_rates["year_2"] * 10000)) / \
+                      (previous_rates["year_10"] * 10000 - previous_rates["year_2"] * 10000) * 100
+
+# Update the metrics dynamically based on rates DataFrame
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.metric(label="2Y Treasury", value="4.12%", delta="-0.03%")
+    st.metric(label="2Y Treasury", value=f"{YR2_rate:.2f}%", delta=f"{YR2_delta:.2f}%")
 with col2:
-    st.metric(label="10Y Treasury", value="3.85%", delta="+0.05%")
+    st.metric(label="10Y Treasury", value=f"{YR10_rate:.2f}%", delta=f"{YR10_delta:.2f}%")
 with col3:
-    st.metric(label="30Y Treasury", value="4.08%", delta="+0.02%")
+    st.metric(label="30Y Treasury", value=f"{YR30_rate:.2f}%", delta=f"{YR30_delta:.2f}%")
 with col4:
-    st.metric(label="2Y-10Y Spread", value="-0.27%", delta="+0.08%")
+    st.metric(label="2Y-10Y Spread", value=f"{YR10_YR2_diff:.2f}%", delta=f"{YR10_YR2_diff_delta:.2f}%")
+
+
 
 def display_plots(plot_files, show_analysis=False):
     
@@ -270,7 +305,7 @@ with tab4:
     with col1:
         volatility = st.number_input("Volatility (Standard Deviation)", value=1.0, step=0.1, format="%.2f", min_value=0.01)
     with col2:
-        distribution_type = st.selectbox("Shock Distribution Type", ["Normal", "Uniform"])
+        distribution_type = st.selectbox("Shock Distribution Type", ["Normal", "Uniform", "Poisson", "Exponential", "Gamma"])
     with col3:
         num_simulations = st.number_input("Number of Simulations", min_value=100, max_value=5000, value=1000, step=100)
 
@@ -280,16 +315,22 @@ with tab4:
             return np.random.normal(0, volatility, size=size)
         elif distribution_type == "Uniform":
             return np.random.uniform(-volatility, volatility, size=size)
+        elif distribution_type == "Poisson":
+            return np.random.poisson(volatility, size=size)  # Poisson distribution
+        elif distribution_type == "Exponential":
+            return np.random.exponential(volatility, size=size)  # Exponential distribution
+        elif distribution_type == "Gamma":
+            return np.random.gamma(shape=2, scale=volatility, size=size)  # Gamma distribution
+
 
     # Create a placeholder covariance matrix and transformation matrix
     np.random.seed(42)  # For reproducibility
-    rates_columns = ["1Y", "2Y", "5Y", "10Y", "30Y"]
-    C = np.cov(np.random.rand(5, len(rates_columns)))  # Example covariance matrix
+    C = rates.cov()
     eigenvalues, eigenvectors = np.linalg.eig(C)
     lambda_sqrt = np.sqrt(eigenvalues)
     eigv_decomp = np.diag(lambda_sqrt)
     B = eigv_decomp @ eigenvectors.T
-    B = pd.DataFrame(data=B[:4] * 100, index=["Wiggle", "Flex", "Twist", "Shift"], columns=rates_columns)
+    B = pd.DataFrame(data=B[:4] * 100, index=["Wiggle", "Flex", "Twist", "Shift"], columns=rates.columns)
 
     # Run multiple simulations and store results
     all_impacts = []
@@ -315,7 +356,7 @@ with tab4:
     # Average Impact Trace with sophisticated styling
     fig.add_trace(
         go.Bar(
-            x=rates_columns,
+            x=rates.columns,
             y=avg_impacts,
             name='Average Impact',
             text=[f"{val:.2f}" for val in avg_impacts],
@@ -333,7 +374,7 @@ with tab4:
     # Standard Deviation Trace
     fig.add_trace(
         go.Scatter(
-            x=rates_columns,
+            x=rates.columns,
             y=std_impacts,
             mode='markers+lines',
             name='Std Deviation',

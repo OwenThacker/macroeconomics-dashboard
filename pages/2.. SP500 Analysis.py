@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import streamlit.components.v1 as components
 import os
 import base64
+import yfinance as yf
 
 # Configure Streamlit page
 st.set_page_config(
@@ -133,25 +134,25 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # Market Insights
-    st.markdown("### Market Insights")
+    st.markdown("### Top New Market Insights", unsafe_allow_html=True)
     insights = [
         {
-            "title": "Energy Impact Alert",
-            "content": "Energy prices surge 15% - logistics sector under pressure",
-            "trend": "↗️ Rising",
+            "title": "Global Tech Sell Off",
+            "content": "Investor concern with the new release of China's DeepSeek model. Nvidia falls 14% in premarket trading",
+            "trend": "↘️ Falling",  # Changed to diagonal downward arrow
             "impact": "High"
         },
         {
-            "title": "Supply Chain Update",
-            "content": "Regional commerce shows 20% growth in Q1",
-            "trend": "↗️ Growing",
-            "impact": "Medium"
+            "title": "Fed Holding Rates",
+            "content": "Fed rate cut 'probably not until the second half of the year' says economist Odeta Kushi of First American",
+            "trend": "→ Stable",
+            "impact": "High"
         },
         {
-            "title": "Tech Sector Analysis",
-            "content": "Enterprise solutions maintain 12% growth rate",
-            "trend": "→ Stable",
-            "impact": "Moderate"
+            "title": "Highest interest rates in Japan in 17 Years",
+            "content": "BoJ raises short-term policy rate 25 bps to 0.5% from 0.25%, causing a jump in the Yen",
+            "trend": "↗️ Growing",
+            "impact": "High"
         }
     ]
     
@@ -177,10 +178,17 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+sp500 = yf.Ticker('^GSPC')
+sp500_hist = sp500.history(period='max')
+sp500_close = sp500_hist['Close']
+latest_price = sp500_close.iloc[-1]
+pct_change = sp500_close.pct_change()
+latest_pct_change = pct_change.iloc[-1] * 100
+
 # Quick Stats
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.metric(label="S&P 500", value="6,049.24", delta="1,198.81 (24.72%) Past Year")
+    st.metric(label="S&P 500", value=f"{latest_price:.2f}", delta=f"{latest_pct_change:.2f}%")
 with col2:
     st.metric(label="GDP Growth", value="2.5%", delta="0.3%")
 with col3:

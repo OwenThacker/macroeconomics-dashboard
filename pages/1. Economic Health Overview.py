@@ -265,25 +265,25 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # Market Insights
-    st.markdown("### Market Insights")
+    st.markdown("### Top New Market Insights", unsafe_allow_html=True)
     insights = [
         {
-            "title": "Energy Impact Alert",
-            "content": "Energy prices surge 15% - logistics sector under pressure",
-            "trend": "↗️ Rising",
+            "title": "Global Tech Sell Off",
+            "content": "Investor concern with the new release of China's DeepSeek model. Nvidia falls 14% in premarket trading",
+            "trend": "↘️ Falling",  # Changed to diagonal downward arrow
             "impact": "High"
         },
         {
-            "title": "Supply Chain Update",
-            "content": "Regional commerce shows 20% growth in Q1",
-            "trend": "↗️ Growing",
-            "impact": "Medium"
+            "title": "Fed Holding Rates",
+            "content": "Fed rate cut 'probably not until the second half of the year' says economist Odeta Kushi of First American",
+            "trend": "→ Stable",
+            "impact": "High"
         },
         {
-            "title": "Tech Sector Analysis",
-            "content": "Enterprise solutions maintain 12% growth rate",
-            "trend": "→ Stable",
-            "impact": "Moderate"
+            "title": "Highest interest rates in Japan in 17 Years",
+            "content": "BoJ raises short-term policy rate 25 bps to 0.5% from 0.25%, causing a jump in the Yen",
+            "trend": "↗️ Growing",
+            "impact": "High"
         }
     ]
     

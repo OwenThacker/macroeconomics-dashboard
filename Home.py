@@ -1,10 +1,10 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-import streamlit.components.v1 as components
+from datetime import datetime
 import os
 import base64
+from PIL import Image
 
 # Configure Streamlit page
 st.set_page_config(
@@ -13,8 +13,23 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Get the absolute path to the image file
-image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
+# Paths to the original and new images
+original_image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
+new_image_path = os.path.join(os.getcwd(), 'plots', 'wheat_field.jpg')
+
+# Open both images
+original_image = Image.open(original_image_path)
+new_image = Image.open(new_image_path)
+
+# Resize the new image to match the dimensions of the original
+new_image_resized = new_image.resize(original_image.size, Image.Resampling.LANCZOS)
+
+# Save the resized image
+new_image_resized_path = os.path.join(os.getcwd(), 'plots', 'Mining_resized.jpg')
+new_image_resized.save(new_image_resized_path)
+
+# Use the resized image for the dashboard
+image_path = new_image_resized_path
 
 # Function to encode image to base64
 def image_to_base64(image_path):
@@ -25,63 +40,98 @@ def image_to_base64(image_path):
 # Get the base64 encoded image
 image_base64 = image_to_base64(image_path)
 
+# Update the font sizes by increasing them by 2 levels
 st.markdown(f"""
     <style>
-    
+        /* Scale the entire page but keep the sidebar unaffected */
         .stApp > div {{
             transform: scale(0.67);
             transform-origin: top center;
-            width: 200%; /* Compensate for scaling down */
+            width: 200%;
             height: 150%;
-            margin-left: -33%; /* Adjust negative margin to shift content right */
+            margin-left: -33%;
         }}
 
-        /* Sidebar Styles */
+        /* Sidebar Styles - Keep sidebar text unchanged */
         [data-testid="stSidebar"] {{
             background-color: #FAFAFA;
             border-right: 1px solid #E0E0E0;
             padding-top: 1rem;
         }}
 
+        /* Main content area (excluding sidebar) */
         .main {{
             background-color: #FFFFFF;
+            font-size: 1.2rem;  /* Increased font size by 2 levels */
         }}
 
-        /* Hero Section Styles */
+        /* Hero Section Styles - Move the background image and ensure it fills the screen */
         .hero-container {{
             position: relative;
-            padding: 6rem 2rem;
+            padding: 11rem 2rem; /* Adjusted padding to push it down */
             text-align: center;
-            margin: -4rem -4rem 1rem -4rem;
+            margin: 0 -4rem 1rem -4rem; /* Adjusted margin */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            height: 100vh; /* Full screen height */
             color: white;
-            background-image: url("{image_base64}");
-            background-size: 100% 80%; /* Adjust the size of the image vertically */
-            background-position: center 0%; /* Move the image down */
+            background-image: linear-gradient(
+                rgba(0, 0, 0, 0.5),
+                rgba(0, 0, 0, 0.5)
+            ), url("{image_base64}");
+            background-size: cover; /* Ensure image covers the entire container */
+            background-position: center top; /* Ensure background starts from the top and stays centered */
             background-repeat: no-repeat;
+            position: relative;
+            overflow: hidden;
         }}
 
-        /* Hero Title Styles */
+        /* Add a semi-transparent overlay */
+        .hero-container::before {{
+            content: '';
+            position: absolute;
+            top: 0rem; /* Align overlay with the background position */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(255, 255, 255, 0.95) 0%,
+                rgba(255, 255, 255, 0.8) 30%,
+                rgba(255, 255, 255, 0.6) 60%,
+                rgba(255, 255, 255, 0.4) 100%
+            );
+            z-index: 1;
+        }}
+
+        /* Hero Title - Move the title down */
         .company-title {{
-            font-size: 6rem;
+            font-size: 150px !important;  /* Explicitly set title font size */
             font-weight: 700;
-            color: #2E7D32; /* Dark green title */
+            color: #2E7D32;
             letter-spacing: -1px;
             margin-bottom: 1rem;
-            z-index: 2; /* Ensure the title is above the image */
-            margin-top: -30rem;
+            z-index: 2;
+            margin-top: -9rem; /* Adjusted margin to move the title down */
+            text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+            position: relative;
         }}
 
+        /* Subtitle - Adjusted size and margin */
         .company-subtitle {{
-            font-size: 2rem;
-            color: #2E7D32;
+            font-size: 30px !important;  /* Explicitly set subtitle font size */
+            color: #1B5E20;
             max-width: 800px;
             margin: 0 auto;
             z-index: 2;
+            position: relative;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
         }}
 
         /* Market Insight Cards (Market Pulse Cards) */
@@ -116,19 +166,19 @@ st.markdown(f"""
         }}
 
         .insight-title {{
-            font-size: 1.2rem;
+            font-size: 1.6rem;  /* Increased insight title font size */
             color: #2E7D32;
             font-weight: 600;
         }}
 
         .insight-content {{
-            font-size: 1.0rem;
+            font-size: 1.4rem;  /* Increased insight content font size */
             color: #262626;
             margin-top: 0.5rem;
         }}
 
         .insight-footer {{
-            font-size: 0.9rem;
+            font-size: 1.1rem;  /* Increased footer font size */
             color: #90A4AE;
             display: flex;
             justify-content: space-between;
@@ -138,12 +188,6 @@ st.markdown(f"""
         .insight-impact {{
             color: #2E7D32;
             font-weight: 600;
-        }}
-
-        /* Market Insights header */
-        .market-insights-header {{
-            margin-bottom: 0.5rem;
-            margin-top: -25rem;
         }}
 
         /* About Section */
@@ -174,9 +218,12 @@ st.markdown(f"""
             border-color: #2E7D32;
         }}
 
+        /* Upsize Text for Main Content Only */
+        body, .stApp, .main, .insight-title, .insight-content, .insight-footer, .company-title, .company-subtitle {{
+            font-size: 1.2rem;  /* Increase font size of main content */
+        }}
     </style>
 """, unsafe_allow_html=True)
-
 
 
 # Sidebar Configuration
@@ -206,25 +253,25 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # Market Insights
-    st.markdown("### Market Insights", unsafe_allow_html=True)
+    st.markdown("### Top New Market Insights", unsafe_allow_html=True)
     insights = [
         {
-            "title": "Energy Impact Alert",
-            "content": "Energy prices surge 15% - logistics sector under pressure",
-            "trend": "↗️ Rising",
+            "title": "Global Tech Sell Off",
+            "content": "Investor concern with the new release of China's DeepSeek model. Nvidia falls 14% in premarket trading",
+            "trend": "↘️ Falling",  # Changed to diagonal downward arrow
             "impact": "High"
         },
         {
-            "title": "Supply Chain Update",
-            "content": "Regional commerce shows 20% growth in Q1",
-            "trend": "↗️ Growing",
-            "impact": "Medium"
+            "title": "Fed Holding Rates",
+            "content": "Fed rate cut 'probably not until the second half of the year' says economist Odeta Kushi of First American",
+            "trend": "→ Stable",
+            "impact": "High"
         },
         {
-            "title": "Tech Sector Analysis",
-            "content": "Enterprise solutions maintain 12% growth rate",
-            "trend": "→ Stable",
-            "impact": "Moderate"
+            "title": "Highest interest rates in Japan in 17 Years",
+            "content": "BoJ raises short-term policy rate 25 bps to 0.5% from 0.25%, causing a jump in the Yen",
+            "trend": "↗️ Growing",
+            "impact": "High"
         }
     ]
     
@@ -303,7 +350,7 @@ st.markdown("""
 st.markdown("""
     <div style="padding: 0rem 0;"> <!-- Adjust padding above the header -->
     <!-- Market Insights Header -->
-    <h2 class="market-insights-header" style="color: #2E7D32; font-size: 2rem; margin-bottom: 0.5rem; margin-top: -15rem;">
+    <h2 class="market-insights-header" style="color: #2E7D32; font-size: 2rem; margin-bottom: 0.5rem; margin-top: 0rem;">
         Top 5 Market Insights This Quarter
     </h2>
     <!-- Insight Cards Grid -->
@@ -327,7 +374,7 @@ st.markdown("""
             </div>
             <div class="insight-footer">
                 <div>↗️ Growing</div>
-                <div class="insight-impact">Medium</div>
+                <div class="insight-impact">Moderate</div>
             </div>
         </div>
         <!-- Insight 3 -->
@@ -380,41 +427,204 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# About Section
-st.markdown("""
-    <div class="about-section">
-        <h2 style="color: #2E7D32; font-size: 2rem; text-align: center; margin-bottom: 2rem;">
-            Empowering Economic Decision Making
-        </h2>
-        <p style="color: #262626; text-align: center; max-width: 800px; margin: 0 auto; font-size: 1.1rem; line-height: 1.6;">
-            Alterra delivers cutting-edge economic intelligence through advanced analytics, 
-            real-time market insights, and comprehensive data analysis. Our platform enables 
-            leaders to make informed decisions in an ever-evolving global economy.
-        </p>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">🎯</div>
-                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Precision Analytics</h3>
-                <p style="color: #666666;">Advanced algorithms delivering accurate market predictions</p>
+import streamlit as st
+from PIL import Image
+import base64
+import os
+
+# Function to encode an image to base64
+def image_to_base64(image):
+    with open(image, "rb") as img_file:
+        encoded_image = base64.b64encode(img_file.read()).decode()
+    return f"data:image/png;base64,{encoded_image}"
+
+# Paths to the images
+oil_digger_path = os.path.join(os.getcwd(), 'plots', 'oil_digger.jpg')
+wheat_field_path = os.path.join(os.getcwd(), 'plots', 'wheat_field.jpg')
+Mining_path = os.path.join(os.getcwd(), 'plots', 'Mining.jpg')
+
+# Check if the image files exist
+if not os.path.exists(oil_digger_path) or not os.path.exists(wheat_field_path):
+    st.error("One or more image files are missing.")
+else:
+    # Convert images to base64
+    oil_digger_base64 = image_to_base64(oil_digger_path)
+    wheat_field_base64 = image_to_base64(wheat_field_path)
+    Mining_base64 = image_to_base64(Mining_path)
+
+    # Custom CSS for styling the About section
+st.markdown(f"""
+    <style>
+        /* About Section Container */
+        .about-container {{
+            background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url("{Mining_base64}");
+            background-size: cover;
+            background-position: center;
+            padding: 4rem 2rem;
+            color: black;
+            border-radius: 16px;
+            margin-top: 3rem;
+            position: relative;
+        }}
+
+        /* Title styling */
+        .about-title {{
+            font-size: 5rem; /* Bigger font size */
+            font-weight: 700; /* Keep bold style */
+            color: #2E7D32; /* Green color */
+            text-align: center; /* Center-align the text */
+            position: absolute; /* Allow the title to overlap the container */
+            top: -9rem; /* Move the title above the container */
+            left: 5%; /* Center the title horizontally */
+        
+            z-index: 10; /* Ensure the title is above other elements */
+            padding: 0.5rem 1rem; /* Optional: Padding for the background */
+            border-radius: 12px; /* Optional: Rounded corners for background */
+        }}
+
+        /* Content Grid Layout */
+        .content-grid {{
+            display: grid;
+            grid-template-columns: 800px 1200px;  /* Fixed widths for 2400px container */
+            gap: 4rem;  /* Increased gap */
+            margin: 0 auto;
+            max-width: 2400px;
+            align-items: start;
+            padding: 0 4rem;  /* Increased padding */
+        }}
+
+        /* Text Container */
+        .text-container {{
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            width: 800px;  /* Fixed width */
+        }}
+
+        /* Description Styling */
+        .about-description {{
+            font-size: 1.3rem !important;  /* Increased font size */
+            color: black;
+            text-align: left;
+            line-height: 1.8;
+            margin-bottom: 2rem;  /* Increased spacing between paragraphs */
+            margin-left: -20rem;
+        }}
+
+        .about-description:last-child {{
+            margin-bottom: 0;
+        }}
+
+        /* Image Collage Styling */
+        .image-collage {{
+               display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(2, 300px);  /* Fixed height rows */
+                gap: 2rem;
+                width: 1200px;  /* Fixed width */
+        }}
+
+        .image-1 {{
+            grid-column: 1;
+            grid-row: 1;
+            width: 100%;
+            height: 100%;
+        }}
+
+        .image-2 {{
+            grid-column: 2;
+            grid-row: 1 / span 2;  /* Spans both rows */
+            width: 100%;
+            height: 100%;
+        }}
+
+        .image-3 {{
+            grid-column: 1;
+            grid-row: 2;
+            width: 100%;
+            height: 100%;
+        }}
+
+        .collage-image {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }}
+
+        .collage-image:hover {{
+            transform: scale(1.02);
+        }}
+
+        /* Closing Remarks */
+        .closing-remarks {{
+            font-size: 1.3rem !important;
+            color: black;
+            text-align: left;
+            max-width: 2400px;
+            margin: 2rem auto 0 auto;
+            padding: 2.5rem 4rem;  /* Increased padding */
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
+# Main container for About Section
+st.markdown('<div class="about-container">', unsafe_allow_html=True)
+
+# Title
+st.markdown('<div class="about-title">About Alterra</div>', unsafe_allow_html=True)
+
+# Content Grid with Text and Image Collage
+st.markdown(f"""
+    <div class="content-grid">
+        <div class="text-container">
+            <p class="about-description">
+                Alterra is revolutionizing the way organizations and investors access and utilize economic intelligence.
+                In today's fast-paced and interconnected global markets, staying ahead requires more than just data—it demands insights.
+                Our mission is to bridge the gap between raw economic data and actionable strategies, providing a platform that empowers
+                professionals to navigate complex financial landscapes with clarity and confidence.
+            </p>
+            <p class="about-description">
+                At the heart of Alterra is our commitment to innovation and precision. We integrate real-time data, advanced analytics,
+                and cutting-edge technology to distill the essence of global economic trends. Whether it's understanding the implications
+                of commodity price shifts, analyzing yield curve dynamics, or forecasting macroeconomic cycles, Alterra delivers insights
+                tailored to your needs.
+            </p>
+            <p class="about-description">
+                Much like the extraction of oil from the earth, Alterra digs deep into economic data to extract the most valuable insights.
+                We don't just skim the surface—we get to the core of the economic trends that matter most to businesses and investors.
+                With the right data, anything is possible. And just like oil, the true value is unlocked when we know where to dig.
+            </p>
+        </div>
+        <div class="image-collage">
+            <div class="image-1">
+                <img src="{oil_digger_base64}" alt="Oil Digger" class="collage-image">
             </div>
-            <div class="feature-card">
-                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">⚡</div>
-                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Real-Time Data</h3>
-                <p style="color: #666666;">Instant access to global market movements</p>
+            <div class="image-2">
+                <img src="{wheat_field_base64}" alt="Wheat Field" class="collage-image">
             </div>
-            <div class="feature-card">
-                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">📈</div>
-                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Strategic Insights</h3>
-                <p style="color: #666666;">Actionable intelligence for informed decision-making</p>
-            </div>
-            <div class="feature-card">
-                <div style="font-size: 2rem; color: #2E7D32; margin-bottom: 1rem;">🔒</div>
-                <h3 style="color: #2E7D32; margin-bottom: 0.5rem;">Enterprise Security</h3>
-                <p style="color: #666666;">Bank-grade protection for your sensitive data</p>
+            <div class="image-3">
+                <img src="{Mining_base64}" alt="Mining" class="collage-image">
             </div>
         </div>
     </div>
+
+    <p class="closing-remarks">
+        Alterra is dedicated to helping clients navigate complex financial landscapes, turn data into actionable insights,
+        and ultimately drive success in an ever-changing world. We provide the tools and the knowledge necessary to make informed
+        decisions that will lead to sustainable growth. Join us in unlocking the potential of economic intelligence.
+    </p>
 """, unsafe_allow_html=True)
+
+# Close About Section
+st.markdown('</div>', unsafe_allow_html=True)
+
 
 # Footer (reused from economic page)
 st.markdown(f"""
