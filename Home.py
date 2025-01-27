@@ -509,7 +509,7 @@ st.markdown(f"""
             text-align: left;
             line-height: 1.8;
             margin-bottom: 2rem;  /* Increased spacing between paragraphs */
-            margin-left: -20rem;
+            margin-left: 0rem !important;
         }}
 
         .about-description:last-child {{
