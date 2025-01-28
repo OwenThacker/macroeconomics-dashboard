@@ -356,14 +356,14 @@ with tab4:
 
     # Create a placeholder covariance matrix and transformation matrix
     np.random.seed(42)  # For reproducibility
-    rates.div(100)
+    rates = rates.div(100)
     C = rates.cov()
     eigenvalues, eigenvectors = np.linalg.eig(C)
     lambda_sqrt = np.sqrt(eigenvalues)
     eigv_decomp = np.diag(lambda_sqrt)
     B = eigv_decomp @ eigenvectors.T
     B = pd.DataFrame(data=B[:4] * 100, index=["Wiggle", "Flex", "Twist", "Shift"], columns=rates.columns)
-
+    
     # Run multiple simulations and store results
     all_impacts = []
     for _ in range(num_simulations):
