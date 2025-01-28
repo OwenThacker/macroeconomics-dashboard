@@ -275,12 +275,14 @@ analysis_categories = {
     "Heatmap Analysis": [
         ("gdp_regime_heatmap", "Heatmap of Asset Performance in Different GDP Regimes", "curr_reg_gdp"),
         ("inflation_regime_heatmap", "Heatmap of Asset Performance in Different Inflation Regimes", "curr_reg_inf"),
-        ("int_regime_heatmap", "Heatmap of Asset Performance in Different Interest Rate Regimes", "curr_reg_int")
+        ("int_regime_heatmap", "Heatmap of Asset Performance in Different Interest Rate Regimes", "curr_reg_int"),
+        ("asset_correlation_heatmap", "Heatmap of Asset correlations", None)
     ],
     "Macro Regime Momentum Analysis": [
         ("gdp_mom_regime", "GDP Month-over-Month Growth Regime", None),
         ("inflation_YoY_regime", "Inflation Year-over-Year Growth Regime", None),
-        ("ir_regime", "Interest Rate Regime", None)
+        ("ir_regime", "Interest Rate Regime", None),
+        (None,None,None)
     ]
 }
 

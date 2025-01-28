@@ -296,7 +296,7 @@ with tab2:  # SP500 Tab (Second)
     filtered_volatility = yearly_volatility[yearly_volatility.index >= start_date]
     filtered_volume_change = volume_pct_change[volume_pct_change.index >= start_date]
 
-    # Create subplots vertically
+    # Create subplots
     fig = sp.make_subplots(
         rows=4, cols=1,
         subplot_titles=(
@@ -307,14 +307,14 @@ with tab2:  # SP500 Tab (Second)
         ),
         vertical_spacing=0.08,
         specs=[[{"type": "scatter"}], [{"type": "scatter"}], 
-               [{"type": "scatter"}], [{"type": "scatter"}]]
+            [{"type": "scatter"}], [{"type": "scatter"}]]
     )
 
     # S&P 500 Price Plot
     fig.add_trace(
         go.Scatter(
-            x=filtered_data.index,
-            y=filtered_data['Close'],
+            x=sp500_hist.index,
+            y=sp500_hist['Close'],
             mode='lines',
             name='S&P 500',
             line=dict(
@@ -330,8 +330,8 @@ with tab2:  # SP500 Tab (Second)
     # Log Returns Plot
     fig.add_trace(
         go.Scatter(
-            x=filtered_returns.index,
-            y=filtered_returns * 100,
+            x=log_returns.index,
+            y=log_returns * 100,
             mode='lines',
             name='Log Returns',
             line=dict(
@@ -347,8 +347,8 @@ with tab2:  # SP500 Tab (Second)
     # Yearly Volatility Plot
     fig.add_trace(
         go.Scatter(
-            x=filtered_volatility.index,
-            y=filtered_volatility * 100,
+            x=yearly_volatility.index,
+            y=yearly_volatility * 100,
             mode='lines',
             name='Yearly Volatility',
             line=dict(
@@ -364,8 +364,8 @@ with tab2:  # SP500 Tab (Second)
     # Volume % Change Plot
     fig.add_trace(
         go.Scatter(
-            x=filtered_volume_change.index,
-            y=filtered_volume_change,
+            x=volume_pct_change.index,
+            y=volume_pct_change,
             mode='lines',
             name='Volume % Change',
             line=dict(
@@ -382,7 +382,7 @@ with tab2:  # SP500 Tab (Second)
     fig.update_layout(
         template='plotly_white',
         height=1200,  # Increased height for 4 plots
-        width=2400,
+        width=2400,   # Set the width of the figure to 2400px
         title=dict(
             text="S&P 500 Market Analysis Dashboard (1960 - Present)",
             x=0.5,
@@ -393,52 +393,20 @@ with tab2:  # SP500 Tab (Second)
         margin=dict(t=120, l=50, r=50, b=50)
     )
 
-    # Update axes
-    fig.update_xaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(128, 128, 128, 0.2)',
-        zeroline=True,
-        zerolinewidth=1,
-        zerolinecolor='rgba(128, 128, 128, 0.5)'
+    # Inject custom CSS to set the plot size explicitly
+    st.markdown(
+        """
+        <style>
+        .plotly-graph-div {
+            width: 2400px !important;
+            height: 1200px !important;
+        }
+        </style>
+        """, unsafe_allow_html=True
     )
 
-    fig.update_yaxes(
-        showgrid=True,
-        gridwidth=1,
-        gridcolor='rgba(128, 128, 128, 0.2)',
-        zeroline=True,
-        zerolinewidth=1,
-        zerolinecolor='rgba(128, 128, 128, 0.5)'
-    )
-
-    # Update hover templates separately for each plot
-    fig.update_traces(
-        hovertemplate="<b>Date</b>: %{x}<br>" +
-                      "<b>Value</b>: %{y:.2f}<br>",
-        row=1
-    )
-    
-    fig.update_traces(
-        hovertemplate="<b>Date</b>: %{x}<br>" +
-                      "<b>Value</b>: %{y:.2f}%<br>",
-        row=2
-    )
-    
-    fig.update_traces(
-        hovertemplate="<b>Date</b>: %{x}<br>" +
-                      "<b>Value</b>: %{y:.2f}%<br>",
-        row=3
-    )
-    
-    fig.update_traces(
-        hovertemplate="<b>Date</b>: %{x}<br>" +
-                      "<b>Value</b>: %{y:.2f}%<br>",
-        row=4
-    )
-
-    # Show plot in Streamlit
-    st.plotly_chart(fig, use_container_width=True)
+    # Show plot in Streamlit without resizing
+    st.plotly_chart(fig, use_container_width=False)  
 
 with tab3:  # Economic Indicators Tab
     st.markdown("### Economic Indicators Analysis")
