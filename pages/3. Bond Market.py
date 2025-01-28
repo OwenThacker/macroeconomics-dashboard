@@ -7,7 +7,7 @@ import os
 import base64
 import plotly.graph_objects as go
 import plotly.io as pio
-from openbb import obb
+from fredapi import Fred
 
 # Configure Streamlit page
 st.set_page_config(
@@ -15,6 +15,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# FRED API Configuration
+secret_value_0 = "4ac2266ac7d9766069d3d0755561988a"  # Replace with your FRED API key
+fred = Fred(api_key=secret_value_0)
 
 # Get the absolute path to the image file
 image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png') 
@@ -200,37 +204,65 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Assuming `rates` dataframe is already loaded, e.g., like this:
-rates  = (
-    obb
-    .fixedincome
-    .government
-    .treasury_rates(
-        start_date="2020-01-01"
-    )
-    .to_df()
-    .dropna()
-    .div(100)
-)
+def get_treasury_rates_fred(start_date="2020-01-01", api_key=None):
+    """
+    Fetch Treasury rates using FRED API.
+    """
+    if not api_key:
+        raise ValueError("API key is required to fetch data from FRED.")
+    
+    fred = Fred(api_key=api_key)
+    
+    # FRED series IDs for different Treasury maturities
+    TREASURY_SERIES = {
+        '3M': 'DTB3',
+        '6M': 'DTB6',
+        '1Y': 'DGS1',
+        '2Y': 'DGS2',
+        '5Y': 'DGS5',
+        '10Y': 'DGS10',
+        '30Y': 'DGS30'
+    }
+    
+    all_data = []
+    
+    for maturity, series_id in TREASURY_SERIES.items():
+        try:
+            series = fred.get_series(series_id, start_date)
+            series.name = f'year_{maturity}'
+            all_data.append(series)
+        except Exception as e:
+            print(f"Could not fetch data for {maturity} Treasury: {e}")
+    
+    if all_data:
+        rates_df = pd.concat(all_data, axis=1)
+        return rates_df.fillna(method='ffill')
+    else:
+        return pd.DataFrame()
+
+# Call the function with the correct API key
+rates = get_treasury_rates_fred(api_key=secret_value_0)
+
+# Process rates
 
 # Get the latest and previous rows of rates
 latest_rates = rates.iloc[-1]  # Most recent day
 previous_rates = rates.iloc[-2]  # Previous day
 
 # Extract specific rates and calculate percentage change
-YR2_rate = latest_rates["year_2"] * 10000
-YR2_delta = ((latest_rates["year_2"] - previous_rates["year_2"]) / previous_rates["year_2"]) * 100
+YR2_rate = latest_rates["year_2Y"] 
+YR2_delta = ((latest_rates["year_2Y"] - previous_rates["year_2Y"]) / previous_rates["year_2Y"]) * 100
 
-YR10_rate = latest_rates["year_10"] * 10000
-YR10_delta = ((latest_rates["year_10"] - previous_rates["year_10"]) / previous_rates["year_10"]) * 100
+YR10_rate = latest_rates["year_10Y"] 
+YR10_delta = ((latest_rates["year_10Y"] - previous_rates["year_10Y"]) / previous_rates["year_10Y"]) * 100
 
-YR30_rate = latest_rates["year_30"] * 10000
-YR30_delta = ((latest_rates["year_30"] - previous_rates["year_30"]) / previous_rates["year_30"]) * 100
+YR30_rate = latest_rates["year_30Y"] 
+YR30_delta = ((latest_rates["year_30Y"] - previous_rates["year_30Y"]) / previous_rates["year_30Y"]) * 100
 
 # Calculate the 2Y-10Y Spread and its delta
 YR10_YR2_diff = YR10_rate - YR2_rate
-YR10_YR2_diff_delta = ((YR10_rate - YR2_rate) - (previous_rates["year_10"] * 10000 - previous_rates["year_2"] * 10000)) / \
-                      (previous_rates["year_10"] * 10000 - previous_rates["year_2"] * 10000) * 100
+YR10_YR2_diff_delta = ((YR10_rate - YR2_rate) - (previous_rates["year_10Y"] - previous_rates["year_2Y"])) / \
+                      (previous_rates["year_10Y"] - previous_rates["year_2Y"]) * 100
 
 # Update the metrics dynamically based on rates DataFrame
 col1, col2, col3, col4 = st.columns(4)
@@ -242,7 +274,6 @@ with col3:
     st.metric(label="30Y Treasury", value=f"{YR30_rate:.2f}%", delta=f"{YR30_delta:.2f}%")
 with col4:
     st.metric(label="2Y-10Y Spread", value=f"{YR10_YR2_diff:.2f}%", delta=f"{YR10_YR2_diff_delta:.2f}%")
-
 
 
 def display_plots(plot_files, show_analysis=False):
@@ -325,6 +356,7 @@ with tab4:
 
     # Create a placeholder covariance matrix and transformation matrix
     np.random.seed(42)  # For reproducibility
+    rates.div(100)
     C = rates.cov()
     eigenvalues, eigenvectors = np.linalg.eig(C)
     lambda_sqrt = np.sqrt(eigenvalues)
