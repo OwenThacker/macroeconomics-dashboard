@@ -299,16 +299,6 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "Yield Analysis", "Rate Fore
 
 # Logic for each tab
 with tab1:
-    # Logic for the "Overview" tab
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        time_period = st.selectbox("Time Period", ["1D", "1W", "1M", "3M", "6M", "1Y"])
-    with col2:
-        chart_type = st.selectbox("Chart Type", ["Line", "Area", "Scatter", "Bar"])
-    with col3:
-        indicators = st.multiselect("Technical Indicators", ["MA", "Bollinger", "RSI", "MACD"])
-    with col4:
-        st.selectbox("Export Options", ["PDF", "CSV", "Excel", "PNG"])
     display_plots(PLOT_CONFIG.keys(), show_analysis=True)
 
 with tab2:

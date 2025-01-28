@@ -6,6 +6,9 @@ import streamlit.components.v1 as components
 import os
 import base64
 import yfinance as yf
+from fredapi import Fred
+import plotly.graph_objects as go
+import plotly.subplots as sp
 
 # Configure Streamlit page
 st.set_page_config(
@@ -13,6 +16,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# FRED API Configuration
+secret_value_0 = "4ac2266ac7d9766069d3d0755561988a"  # Replace with your FRED API key
+fred = Fred(api_key=secret_value_0)
 
 # Get the absolute path to the image file
 image_path = os.path.join(os.getcwd(), 'plots', 'sp500_gdp.png')
@@ -178,47 +185,77 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# Fetching live data
+
 sp500 = yf.Ticker('^GSPC')
 sp500_hist = sp500.history(period='max')
 sp500_close = sp500_hist['Close']
 latest_price = sp500_close.iloc[-1]
 pct_change = sp500_close.pct_change()
 latest_pct_change = pct_change.iloc[-1] * 100
+# Calculate the Log Returns
+log_returns = np.log(sp500_close / sp500_close.shift(1))
+
+# Calculate the rolling yearly volatility (252 trading days in a year)
+yearly_volatility = log_returns.rolling(window=252).std() * np.sqrt(252)  # Annualizing volatility
+
+# Calculate the percentage change of the Volume
+volume_pct_change = sp500_hist["Volume"].pct_change(365) * 100  # Volume pct change from a year ago
+
+
+# Retrieve data from FRED
+gdp_data = fred.get_series('GDPC1')  # Real GDP
+inflation_data = fred.get_series('CPIAUCSL')  # Inflation (CPI)
+unemployment_data = fred.get_series('UNRATE')  # Unemployment
+
+# Fill missing data (NaN) using forward fill or interpolation
+gdp_data = gdp_data.fillna(method='ffill')  # Forward fill missing GDP data
+inflation_data = inflation_data.fillna(method='ffill')  # Forward fill missing Inflation data
+unemployment_data = unemployment_data.fillna(method='ffill')  # Forward fill missing Unemployment data
+
+# Resample data to daily frequency (if needed, otherwise skip this part)
+gdp_data = gdp_data.resample('D').ffill()  # Resample to daily and forward fill missing values
+inflation_data = inflation_data.resample('D').ffill()  # Resample to daily and forward fill missing values
+unemployment_data = unemployment_data.resample('D').ffill()  # Resample to daily and forward fill missing values
+
+# Calculate Year-over-Year (YoY) Growth: Percentage change from 365 days ago
+latest_gdp_yoy = round(gdp_data.pct_change(365).iloc[-1] * 100, 2)  # GDP YoY Growth
+latest_inf_yoy = round(inflation_data.pct_change(365).iloc[-1] * 100, 2)  # Inflation YoY Growth
+
+# Calculate Daily Percentage Change (Delta) from the previous day
+latest_gdp_pct = round(gdp_data.pct_change().iloc[-1] * 100, 2)  # Daily GDP Percentage Change
+latest_inf_pct = round(inflation_data.pct_change().iloc[-1] * 100, 2)  # Daily Inflation Percentage Change
+
+# Get the latest values for GDP, Inflation, and Unemployment
+latest_gdp = round(gdp_data.iloc[-1], 2)  # Latest GDP value
+latest_inf = round(inflation_data.iloc[-1], 2)  # Latest Inflation value
+latest_unemp = round(unemployment_data.iloc[-1], 2)  # Latest Unemployment rate
+
+# Get the daily percentage change for Unemployment
+latest_unemp_pct = round(unemployment_data.pct_change().iloc[-1] * 100, 2)  # Daily Unemployment Percentage Change
+
 
 # Quick Stats
 col1, col2, col3, col4 = st.columns(4)
 with col1:
-    st.metric(label="S&P 500", value=f"{latest_price:.2f}", delta=f"{latest_pct_change:.2f}%")
+    st.metric(label="S&P 500", value=f"{latest_price:.2f}", delta=f"{latest_pct_change:.2f}%")  # Replace with actual S&P 500 values
 with col2:
-    st.metric(label="GDP Growth", value="2.5%", delta="0.3%")
+    st.metric(label="GDP Growth (YoY)", value=f"{latest_gdp_yoy}%", delta=f"{latest_gdp_pct}%")
 with col3:
-    st.metric(label="Inflation Rate", value="3.4%", delta="-0.1%")
+    st.metric(label="Inflation Rate (YoY)", value=f"{latest_inf_yoy}%", delta=f"{latest_inf_pct}%")
 with col4:
-    st.metric(label="Unemployment", value="3.7%", delta="0.0%")
+    st.metric(label="Unemployment", value=f"{latest_unemp}%", delta=f"{latest_unemp_pct}%")
 
-# Main Navigation
-tab1, tab2, tab3, tab4 = st.tabs(["Overview", "Economic Indicators", "Market Analysis", "Reports"])
+
+# Main Navigation with SP500 tab moved second
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["Overview", "SP500", "Economic Indicators", "Market Analysis", "Reports"])
 
 with tab1:
-    # Filters Row
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        time_period = st.selectbox("Time Period", 
-            ["1M", "3M", "6M", "1Y", "5Y", "MAX"])
-    with col2:
-        chart_type = st.selectbox("Chart Type",
-            ["Line", "Candlestick", "Area", "Bar"])
-    with col3:
-        indicators = st.multiselect("Technical Indicators",
-            ["MA", "RSI", "MACD", "BB"])
-    with col4:
-        st.selectbox("Export Options",
-            ["PDF", "CSV", "Excel", "PNG"])
 
     # Plot Categories
     plot_category = st.selectbox(
         "Select Analysis Category",
-        ["GDP Analysis", "Inflation Metrics", "Employment Data", "Interest Rates"]
+        ["GDP Analysis", "Inflation Metrics", "Employment Data", "Interest Rates", "SP500"]
     )
 
     # Define plot descriptions
@@ -250,28 +287,170 @@ with tab1:
                 st.info(PLOT_DESCRIPTIONS[plot_file])
             components.html(html_content, height=800, width=2400)
 
-with tab2:
+
+with tab2:  # SP500 Tab (Second)
+    # Filter data from 1960 onwards
+    start_date = '1960-01-01'
+    filtered_data = sp500_hist[sp500_hist.index >= start_date]
+    filtered_returns = log_returns[log_returns.index >= start_date]
+    filtered_volatility = yearly_volatility[yearly_volatility.index >= start_date]
+    filtered_volume_change = volume_pct_change[volume_pct_change.index >= start_date]
+
+    # Create subplots vertically
+    fig = sp.make_subplots(
+        rows=4, cols=1,
+        subplot_titles=(
+            "S&P 500 Price",
+            "S&P 500 Log Returns (%)",
+            "S&P 500 Yearly Volatility (%)",
+            "S&P 500 Volume % Change"
+        ),
+        vertical_spacing=0.08,
+        specs=[[{"type": "scatter"}], [{"type": "scatter"}], 
+               [{"type": "scatter"}], [{"type": "scatter"}]]
+    )
+
+    # S&P 500 Price Plot
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_data.index,
+            y=filtered_data['Close'],
+            mode='lines',
+            name='S&P 500',
+            line=dict(
+                color='rgb(0, 91, 150)',
+                width=1.5
+            ),
+            fill='tonexty',
+            fillcolor='rgba(0, 91, 150, 0.1)'
+        ),
+        row=1, col=1
+    )
+
+    # Log Returns Plot
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_returns.index,
+            y=filtered_returns * 100,
+            mode='lines',
+            name='Log Returns',
+            line=dict(
+                color='rgb(49, 130, 189)',
+                width=1.5
+            ),
+            fill='tonexty',
+            fillcolor='rgba(49, 130, 189, 0.1)'
+        ),
+        row=2, col=1
+    )
+
+    # Yearly Volatility Plot
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_volatility.index,
+            y=filtered_volatility * 100,
+            mode='lines',
+            name='Yearly Volatility',
+            line=dict(
+                color='rgb(50, 171, 96)',
+                width=1.5
+            ),
+            fill='tonexty',
+            fillcolor='rgba(50, 171, 96, 0.1)'
+        ),
+        row=3, col=1
+    )
+
+    # Volume % Change Plot
+    fig.add_trace(
+        go.Scatter(
+            x=filtered_volume_change.index,
+            y=filtered_volume_change,
+            mode='lines',
+            name='Volume % Change',
+            line=dict(
+                color='rgb(189, 49, 49)',
+                width=1.5
+            ),
+            fill='tonexty',
+            fillcolor='rgba(189, 49, 49, 0.1)'
+        ),
+        row=4, col=1
+    )
+
+    # Update layout for better visibility
+    fig.update_layout(
+        template='plotly_white',
+        height=1200,  # Increased height for 4 plots
+        width=2400,
+        title=dict(
+            text="S&P 500 Market Analysis Dashboard (1960 - Present)",
+            x=0.5,
+            y=0.95,
+            font=dict(size=24)
+        ),
+        showlegend=False,
+        margin=dict(t=120, l=50, r=50, b=50)
+    )
+
+    # Update axes
+    fig.update_xaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='rgba(128, 128, 128, 0.2)',
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor='rgba(128, 128, 128, 0.5)'
+    )
+
+    fig.update_yaxes(
+        showgrid=True,
+        gridwidth=1,
+        gridcolor='rgba(128, 128, 128, 0.2)',
+        zeroline=True,
+        zerolinewidth=1,
+        zerolinecolor='rgba(128, 128, 128, 0.5)'
+    )
+
+    # Update hover templates separately for each plot
+    fig.update_traces(
+        hovertemplate="<b>Date</b>: %{x}<br>" +
+                      "<b>Value</b>: %{y:.2f}<br>",
+        row=1
+    )
+    
+    fig.update_traces(
+        hovertemplate="<b>Date</b>: %{x}<br>" +
+                      "<b>Value</b>: %{y:.2f}%<br>",
+        row=2
+    )
+    
+    fig.update_traces(
+        hovertemplate="<b>Date</b>: %{x}<br>" +
+                      "<b>Value</b>: %{y:.2f}%<br>",
+        row=3
+    )
+    
+    fig.update_traces(
+        hovertemplate="<b>Date</b>: %{x}<br>" +
+                      "<b>Value</b>: %{y:.2f}%<br>",
+        row=4
+    )
+
+    # Show plot in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+with tab3:  # Economic Indicators Tab
     st.markdown("### Economic Indicators Analysis")
-    st.info("Economic indicators analysis content will be displayed here")
+    st.info("Economic indicators analysis content will be displayed here.")
 
-with tab3:
+with tab4:  # Market Analysis Tab
     st.markdown("### Market Analysis")
-    st.info("Market analysis content will be displayed here")
+    st.info("Market analysis content will be displayed here.")
 
-with tab4:
+with tab5:  # Reports Tab
     st.markdown("### Reports")
-    st.info("Reports and documentation will be displayed here")
-
-# Data Table Section
-st.markdown("### Historical Data")
-show_data = st.checkbox("Show Raw Data")
-if show_data:
-    st.dataframe({
-        "Date": ["2024-01-22", "2024-01-21", "2024-01-20"],
-        "S&P 500": [4927.23, 4911.95, 4898.67],
-        "GDP": [2.5, 2.5, 2.4],
-        "CPI": [3.4, 3.4, 3.5]
-    })
+    st.info("Reports and documentation will be displayed here.")
 
 # Footer
 st.markdown("""
